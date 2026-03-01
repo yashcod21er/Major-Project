@@ -9,7 +9,7 @@
     gap: 18px;
     margin-bottom: 28px;
     padding: 10px 0 18px;
-    border-bottom: 1px solid #ebebeb;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .airbnb-filters {
@@ -32,10 +32,10 @@
     background:
         radial-gradient(circle at 12% 20%, rgba(255, 56, 92, 0.08) 0%, rgba(255, 56, 92, 0) 34%),
         linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-    border: 1px solid #ededed;
+    border: 1px solid var(--color-border);
     border-radius: 22px;
     padding: 14px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 12px 30px rgba(16, 24, 40, 0.07);
 }
 
 .search-pill,
@@ -49,7 +49,7 @@
     align-items: center;
     gap: 10px;
     padding: 8px 14px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .filter-pill:hover,
@@ -60,8 +60,14 @@
 
 .filter-pill:focus-within,
 .price-pill:focus-within {
-    border-color: #ff385c;
-    box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.12);
+    border-color: var(--color-brand);
+    box-shadow: var(--shadow-focus);
+}
+
+.filter-pill.has-selection,
+.price-pill.has-selection {
+    border-color: rgba(255, 56, 92, 0.45);
+    background: linear-gradient(180deg, #ffffff 0%, #fff7f9 100%);
 }
 
 .filter-pill {
@@ -88,7 +94,7 @@
 }
 
 .filter-pill:focus-within::after {
-    color: #ff385c;
+    color: var(--color-brand);
     transform: translateY(-50%) rotate(180deg);
 }
 
@@ -135,6 +141,26 @@
     padding: 10px;
 }
 
+.filter-badge {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #f2f2f2;
+    color: #555;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    line-height: 1;
+}
+
+.filter-pill.has-selection .filter-badge {
+    background: var(--color-brand);
+    color: #fff;
+}
+
 .price-pill {
     justify-content: space-between;
     gap: 8px;
@@ -157,7 +183,7 @@
 }
 
 .price-pill input:focus {
-    border-color: #ff385c;
+    border-color: var(--color-brand);
     background: #fff;
 }
 
@@ -179,6 +205,33 @@
     background: linear-gradient(135deg, #2a2a2a 0%, #151515 100%);
 }
 
+.clear-filters-btn.is-disabled {
+    background: #f2f2f2;
+    color: #8b8b8b;
+    border-color: #e5e5e5;
+    pointer-events: none;
+}
+
+.active-filters-badge {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-filters-btn.is-disabled .active-filters-badge {
+    background: #e2e2e2;
+    border-color: #e2e2e2;
+    color: #666;
+}
+
 .airbnb-filter-chip {
     border: none;
     background: transparent;
@@ -193,7 +246,7 @@
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 #listing-grid {
@@ -210,8 +263,9 @@
 }
 
 .airbnb-filter-chip.active {
-    color: #222;
-    border-bottom-color: #222;
+    color: #141414;
+    border-bottom-color: var(--color-brand);
+    background: linear-gradient(180deg, rgba(255, 56, 92, 0.08) 0%, rgba(255, 56, 92, 0) 90%);
 }
 
 .tax-toggle {
@@ -263,8 +317,94 @@
 
 .no-listings-message {
     margin-top: 6px;
-    color: #555;
-    font-weight: 600;
+    border: 1px dashed #e3e3e3;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+    padding: 24px 20px;
+    text-align: center;
+}
+
+.no-listings-message i {
+    font-size: 1.5rem;
+    color: var(--color-brand);
+}
+
+.no-listings-message h5 {
+    margin: 12px 0 6px;
+    color: #222;
+}
+
+.no-listings-message p {
+    margin-bottom: 14px;
+    color: #666;
+}
+
+.no-results-reset-btn {
+    border: 1px solid #1f1f1f;
+    background: #fff;
+    color: #1f1f1f;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.no-results-reset-btn:hover {
+    background: #1f1f1f;
+    color: #fff;
+}
+
+.listing-skeletons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 18px;
+    margin-bottom: 14px;
+}
+
+.skeleton-card {
+    border-radius: 18px;
+    border: 1px solid #efefef;
+    background: #fff;
+    padding: 10px;
+}
+
+.skeleton-image {
+    width: 100%;
+    aspect-ratio: 1 / 0.95;
+    border-radius: 14px;
+    background: #ececec;
+}
+
+.skeleton-lines {
+    padding-top: 12px;
+}
+
+.skeleton-line {
+    height: 11px;
+    border-radius: 999px;
+    background: #ececec;
+    margin-bottom: 10px;
+}
+
+.skeleton-line-short {
+    width: 72%;
+}
+
+.skeleton-line-price {
+    width: 44%;
+    margin-bottom: 2px;
+}
+
+.shimmer {
+    background-image: linear-gradient(100deg, #ededed 25%, #f6f6f6 37%, #ededed 63%);
+    background-size: 400% 100%;
+    animation: shimmerWave 1.5s infinite linear;
+}
+
+@keyframes shimmerWave {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
 }
 
 /* 1. The Card Container */
@@ -273,6 +413,7 @@
     background-color: transparent !important;
     margin-bottom: 2rem;
     cursor: pointer; /* Show it's clickable */
+    transition: transform 0.22s ease;
 }
 
 /* 2. The Image Wrapper */
@@ -281,7 +422,8 @@
     position: relative; /* Needed for absolute positioning of the heart */
     aspect-ratio: 1 / 0.95; /* Airbnb uses a slightly square-ish ratio */
     overflow: hidden;
-    border-radius: 12px; /* The signature rounded corners */
+    border-radius: 16px; /* The signature rounded corners */
+    box-shadow: 0 8px 22px rgba(16, 24, 40, 0.08);
 }
 
 .card-img-top {
@@ -294,7 +436,11 @@
 /* Optional: Slight zoom on hover like Airbnb */
 .listing-card:hover .card-img-top {
     transform: scale(1.05); /* Subtle zoom */
-    opacity: 0.95;
+    opacity: 0.97;
+}
+
+.listing-card:hover {
+    transform: translateY(-2px);
 }
 
 /* 3. The Heart Icon Overlay */
@@ -317,19 +463,21 @@
 
 /* 4. Card Body (Text) */
 .card-body {
-    padding: 0.5rem 0 0 0 !important; /* Remove side padding, keep top gap */
+    padding: 0.68rem 0.1rem 0 0.1rem !important; /* Remove side padding, keep top gap */
 }
 
 .card-text {
     font-size: 15px;
-    line-height: 1.4;
+    line-height: 1.5;
     color: #222222;
 }
 
 .card-text b {
-    font-weight: 600; /* Semi-bold for title */
+    font-weight: 700; /* Semi-bold for title */
     display: block; /* Forces title to own line */
-    margin-bottom: 2px;
+    margin-bottom: 3px;
+    color: #171717;
+    letter-spacing: -0.01em;
 }
 
 /* 5. Pricing Styling */
@@ -371,6 +519,10 @@
     .clear-filters-btn {
         grid-column: span 2;
         justify-content: center;
+    }
+
+    .listing-skeletons {
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     }
 
     #listing-grid .listing-item {
@@ -429,13 +581,18 @@
         font-size: 0.86rem;
     }
 
+    .filter-badge {
+        min-width: 20px;
+        height: 20px;
+    }
+
     .price-pill input {
         width: calc(50% - 34px);
         min-width: 84px;
     }
 
     .card-img-wrapper {
-        border-radius: 10px;
+        border-radius: 12px;
     }
 
     .card-text {

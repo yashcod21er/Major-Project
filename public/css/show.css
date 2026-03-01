@@ -14,10 +14,10 @@
    1. GLOBAL SETTINGS
 ========================================= */
 body {
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #fafafa;
-    color: #222;
-    padding-top: 90px;
+    font-family: var(--font-base);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    padding-top: 0;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -31,68 +31,7 @@ a {
 }
 
 /* =========================================
-   2. FROSTED GLASS NAVBAR
-========================================= */
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    z-index: 1000;
-    
-    /* Frosted Glass Effect */
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    
-    display: flex;
-    align-items: center;
-    padding: 0 !important;
-}
-
-.container-fluid {
-    width: 100%;
-    padding: 0 40px !important;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-/* --- BRAND LOGO (Restored to Original Font) --- */
-.navbar-brand {
-    color: #ff385c !important;
-    font-size: 1.5rem;
-    font-weight: 800; /* Bold and clean */
-    /* Removed 'Playfair Display' so it defaults to Manrope */
-    font-family: inherit; 
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.navbar-brand i {
-    font-size: 1.8rem; /* Icon size */
-}
-
-.nav-link {
-    font-size: 0.95rem;
-    font-weight: 600;
-    padding: 10px 20px !important;
-    border-radius: 30px;
-    color: #000 !important;
-    transition: background 0.2s;
-}
-
-.nav-link:hover {
-    background: #f1f1f1;
-    color: #000 !important;
-}
-
-/* =========================================
-   3. LISTING CARD (The Content)
+   2. LISTING CARD (The Content)
 ========================================= */
 .listing-card {
     padding: 0;
@@ -107,12 +46,13 @@ a {
 /* TITLES: Keep 'Playfair Display' here for the "Magazin" look on the listing itself */
 .listing-card h3, 
 .listing-card h2 { 
-    font-family: 'Playfair Display', serif;
-    font-size: 2.4rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 2.2vw, 2.45rem);
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     color: #1a1a1a;
-    line-height: 1.1;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
 }
 
 /* Subtitle/Location */
@@ -126,15 +66,15 @@ a {
 
 /* Main Description Text */
 .listing-card p {
-    font-size: 1.05rem;
-    line-height: 1.7;
-    color: #484848;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #4d4d4d;
     margin-bottom: 15px;
 }
 
 /* Price Highlight */
 .listing-card b {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     color: #222;
     font-weight: 700;
     border-bottom: 2px solid #ff385c;
@@ -162,8 +102,8 @@ a {
 }
 
 .map-heading {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.6rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 1.7vw, 1.62rem);
     margin-bottom: 14px;
     color: #1f1f1f;
 }
@@ -200,10 +140,10 @@ a {
 }
 
 .btns .btn {
-    padding: 12px 28px;
+    padding: 11px 24px;
     border-radius: 50px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -261,34 +201,6 @@ footer {
 }
 
 /* =========================================
-   MOBILE RESPONSIVE
-========================================= */
-@media(max-width: 768px) {
-    .container-fluid { padding: 0 20px !important; }
-    
-    .listing-card h3 { font-size: 1.8rem; }
-    
-    .show-img { 
-        height: 300px; 
-        border-radius: 0; 
-        margin-left: -20px; 
-        margin-right: -20px;
-        width: calc(100% + 40px);
-    }
-    
-    .listing-card {
-        padding: 0 20px;
-    }
-
-    .btns { flex-direction: column; }
-    .btns .btn { width: 100%; text-align: center; }
-
-    #listing-map {
-        height: 280px;
-    }
-}
-
-/* =========================================
    ISOLATED REVIEW SECTION STYLES
 ========================================= */
 
@@ -302,8 +214,8 @@ footer {
 }
 
 .unique-review-wrapper .review-heading {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.8rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 1.9vw, 1.85rem);
     font-weight: 700;
     color: #222;
     margin-bottom: 25px;
@@ -496,7 +408,7 @@ footer {
 /* Comment Text */
 .unique-review-wrapper .review-text {
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.7;
     color: #555;
     margin: 0;
 }
@@ -533,25 +445,7 @@ footer {
 
 @media (max-width: 768px) {
     body {
-        padding-top: 84px;
-    }
-
-    .navbar {
-        height: auto;
-        min-height: 86px;
-        align-items: stretch;
-    }
-
-    .container-fluid {
-        padding: 0 14px !important;
-    }
-
-    .navbar-collapse {
-        width: 100%;
-        margin-top: 8px;
-        padding: 12px;
-        border-top: 1px solid #ebebeb;
-        background: #fff;
+        padding-top: 0;
     }
 
     .listing-card h3,

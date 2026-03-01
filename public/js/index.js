@@ -1,15 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
     const filterRoot = document.getElementById("airbnb-filters");
     const listingGrid = document.getElementById("listing-grid");
+    const listingSkeletons = document.getElementById("listing-skeletons");
     const noResultsMessage = document.getElementById("no-listings-message");
+    const noResultsResetButton = document.getElementById("no-results-reset-btn");
     const taxToggle = document.getElementById("tax-toggle-input");
 
     const searchInput = document.getElementById("navbar-search-input");
     const countryFilter = document.getElementById("country-filter");
     const locationFilter = document.getElementById("location-filter");
+    const countryFilterBadge = document.getElementById("country-filter-badge");
+    const locationFilterBadge = document.getElementById("location-filter-badge");
     const minPriceFilter = document.getElementById("min-price-filter");
     const maxPriceFilter = document.getElementById("max-price-filter");
     const clearFiltersButton = document.getElementById("clear-filters-btn");
+    const activeFiltersBadge = document.getElementById("active-filters-badge");
     const navbarSearchForm = document.querySelector(".navbar-airbnb-search");
 
     if (!filterRoot || !listingGrid) return;
@@ -56,9 +61,13 @@ document.addEventListener("DOMContentLoaded", () => {
     populateCountryOptions();
     populateLocationOptions("");
     initializePriceInputs();
-
-    applyFilters();
     updateDisplayedPrices();
+
+    showLoadingState();
+    window.setTimeout(() => {
+        applyFilters();
+        hideLoadingState();
+    }, 220);
 
     filterRoot.addEventListener("click", (event) => {
         const chip = event.target.closest(".airbnb-filter-chip");
@@ -90,19 +99,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (maxPriceFilter) maxPriceFilter.addEventListener("input", applyFilters);
 
     if (clearFiltersButton) {
-        clearFiltersButton.addEventListener("click", () => {
-            activeCategory = "all";
-            renderCategoryChips();
+        clearFiltersButton.addEventListener("click", resetAllFilters);
+    }
 
-            if (searchInput) searchInput.value = "";
-            if (countryFilter) countryFilter.value = "";
-            populateLocationOptions("");
-            if (locationFilter) locationFilter.value = "";
-            if (minPriceFilter) minPriceFilter.value = String(minPriceInData);
-            if (maxPriceFilter) maxPriceFilter.value = String(maxPriceInData);
-
-            applyFilters();
-        });
+    if (noResultsResetButton) {
+        noResultsResetButton.addEventListener("click", resetAllFilters);
     }
 
     function renderCategoryChips() {
@@ -196,6 +197,63 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (noResultsMessage) noResultsMessage.classList.toggle("d-none", visibleCount > 0);
+        updateFilterVisualState(query, selectedCountry, selectedLocation, minPrice, maxPrice, visibleCount);
+    }
+
+    function resetAllFilters() {
+        activeCategory = "all";
+        renderCategoryChips();
+
+        if (searchInput) searchInput.value = "";
+        if (countryFilter) countryFilter.value = "";
+        populateLocationOptions("");
+        if (locationFilter) locationFilter.value = "";
+        if (minPriceFilter) minPriceFilter.value = String(minPriceInData);
+        if (maxPriceFilter) maxPriceFilter.value = String(maxPriceInData);
+
+        applyFilters();
+    }
+
+    function updateFilterVisualState(query, selectedCountry, selectedLocation, minPrice, maxPrice, visibleCount) {
+        const hasCountry = Boolean(selectedCountry);
+        const hasLocation = Boolean(selectedLocation);
+        const hasSearch = Boolean(query);
+        const hasCategory = activeCategory !== "all";
+        const hasPrice = minPrice !== minPriceInData || maxPrice !== maxPriceInData;
+        const activeCount = [hasSearch, hasCategory, hasCountry, hasLocation, hasPrice].filter(Boolean).length;
+
+        if (countryFilterBadge) countryFilterBadge.textContent = hasCountry ? "1" : "0";
+        if (locationFilterBadge) locationFilterBadge.textContent = hasLocation ? "1" : "0";
+        if (activeFiltersBadge) activeFiltersBadge.textContent = String(activeCount);
+
+        const countryPill = countryFilter?.closest(".filter-pill");
+        const locationPill = locationFilter?.closest(".filter-pill");
+        const pricePill = minPriceFilter?.closest(".price-pill");
+
+        if (countryPill) countryPill.classList.toggle("has-selection", hasCountry);
+        if (locationPill) locationPill.classList.toggle("has-selection", hasLocation);
+        if (pricePill) pricePill.classList.toggle("has-selection", hasPrice);
+
+        if (clearFiltersButton) {
+            clearFiltersButton.classList.toggle("is-disabled", activeCount === 0);
+            clearFiltersButton.setAttribute("aria-disabled", String(activeCount === 0));
+            clearFiltersButton.title = activeCount === 0 ? "No filters selected" : "Clear all filters";
+        }
+
+        if (visibleCount === 0 && noResultsMessage) {
+            noResultsMessage.classList.remove("d-none");
+        }
+    }
+
+    function showLoadingState() {
+        if (listingSkeletons) listingSkeletons.classList.remove("d-none");
+        if (listingGrid) listingGrid.classList.add("d-none");
+        if (noResultsMessage) noResultsMessage.classList.add("d-none");
+    }
+
+    function hideLoadingState() {
+        if (listingSkeletons) listingSkeletons.classList.add("d-none");
+        if (listingGrid) listingGrid.classList.remove("d-none");
     }
 
     function matchesKeywordCategory(searchableText, keywords) {

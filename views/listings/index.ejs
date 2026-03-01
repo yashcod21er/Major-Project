@@ -1,8 +1,14 @@
 <% layout("/layouts/boilerplate") %>
 
-<link rel="stylesheet" href="/css/listing.css?v=20260301-4">
+<link rel="stylesheet" href="/css/listing.css?v=20260301-5">
+<noscript>
+    <style>
+        #listing-skeletons { display: none !important; }
+        #listing-grid { display: flex !important; }
+    </style>
+</noscript>
 
-<div class="container-fluid mt-3">
+<div class="container-fluid mt-3 listing-page-shell">
     <div class="airbnb-filter-shell">
         <div class="airbnb-filters" id="airbnb-filters"></div>
         <label class="tax-toggle">
@@ -18,6 +24,7 @@
             <select id="country-filter">
                 <option value="">All countries</option>
             </select>
+            <span class="filter-badge" id="country-filter-badge">0</span>
         </div>
 
         <div class="filter-pill">
@@ -25,6 +32,7 @@
             <select id="location-filter">
                 <option value="">All locations</option>
             </select>
+            <span class="filter-badge" id="location-filter-badge">0</span>
         </div>
 
         <div class="price-pill">
@@ -37,10 +45,24 @@
         <button id="clear-filters-btn" type="button" class="clear-filters-btn">
             <i class="fa-solid fa-rotate-left"></i>
             <span>Reset</span>
+            <span id="active-filters-badge" class="active-filters-badge">0</span>
         </button>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4" id="listing-grid">
+    <div id="listing-skeletons" class="listing-skeletons">
+        <% for (let i = 0; i < 8; i++) { %>
+            <div class="skeleton-card">
+                <div class="skeleton-image shimmer"></div>
+                <div class="skeleton-lines">
+                    <div class="skeleton-line shimmer"></div>
+                    <div class="skeleton-line skeleton-line-short shimmer"></div>
+                    <div class="skeleton-line skeleton-line-price shimmer"></div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 d-none" id="listing-grid">
         <% for (let listing of listings){ %>
             <div
                 class="col mb-4 listing-item"
@@ -77,12 +99,15 @@
         <% } %>
     </div>
 
-    <p id="no-listings-message" class="no-listings-message d-none">
-        No listings match the selected filters.
-    </p>
+    <div id="no-listings-message" class="no-listings-message d-none">
+        <i class="fa-regular fa-face-frown-open"></i>
+        <h5>No stays match your filters</h5>
+        <p>Try changing location, country, or price range.</p>
+        <button type="button" id="no-results-reset-btn" class="no-results-reset-btn">Clear all filters</button>
+    </div>
 </div>
 
-<script src="/js/index.js?v=20260301-1"></script>
+<script src="/js/index.js?v=20260301-2"></script>
 
 
 
