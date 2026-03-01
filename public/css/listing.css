@@ -1,0 +1,396 @@
+/* =========================================
+   LISTING CARD STYLING (Airbnb Style)
+   ========================================= */
+
+.airbnb-filter-shell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 28px;
+    padding: 10px 0 18px;
+    border-bottom: 1px solid #ebebeb;
+}
+
+.airbnb-filters {
+    display: flex;
+    gap: 28px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.airbnb-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.airbnb-search-shell {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.35fr auto;
+    gap: 14px;
+    margin-bottom: 24px;
+    background:
+        radial-gradient(circle at 12% 20%, rgba(255, 56, 92, 0.08) 0%, rgba(255, 56, 92, 0) 34%),
+        linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    border: 1px solid #ededed;
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+.search-pill,
+.filter-pill,
+.price-pill {
+    border: 1px solid #e3e3e3;
+    border-radius: 999px;
+    background: #fff;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.filter-pill:hover,
+.price-pill:hover {
+    border-color: #d7d7d7;
+    transform: translateY(-1px);
+}
+
+.filter-pill:focus-within,
+.price-pill:focus-within {
+    border-color: #ff385c;
+    box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.12);
+}
+
+.filter-pill {
+    position: relative;
+    padding-right: 40px;
+}
+
+.filter-pill::after {
+    content: "\f078";
+    font-family: "Font Awesome 7 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #606060;
+    font-size: 0.72rem;
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.filter-pill:hover::after {
+    color: #2f2f2f;
+}
+
+.filter-pill:focus-within::after {
+    color: #ff385c;
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.search-pill i,
+.filter-pill i {
+    color: #5a5a5a;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.search-pill input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 0.92rem;
+}
+
+.filter-pill select {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #2a2a2a;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 20px;
+    letter-spacing: 0.1px;
+}
+
+.filter-pill select option {
+    background: #ffffff;
+    color: #232323;
+    font-weight: 600;
+    padding: 10px;
+}
+
+.price-pill {
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.price-pill span {
+    font-size: 0.75rem;
+    color: #717171;
+    font-weight: 600;
+}
+
+.price-pill input {
+    width: 88px;
+    border: 1px solid #eeeeee;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    outline: none;
+    background: #fafafa;
+}
+
+.price-pill input:focus {
+    border-color: #ff385c;
+    background: #fff;
+}
+
+.clear-filters-btn {
+    border: 1px solid #111;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #1f1f1f 0%, #101010 100%);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0 18px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.clear-filters-btn:hover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #151515 100%);
+}
+
+.airbnb-filter-chip {
+    border: none;
+    background: transparent;
+    color: #717171;
+    min-width: max-content;
+    padding: 10px 8px 12px;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+#listing-grid {
+    row-gap: 10px;
+}
+
+.airbnb-filter-chip i {
+    font-size: 1.2rem;
+}
+
+.airbnb-filter-chip:hover {
+    color: #222;
+    transform: translateY(-1px);
+}
+
+.airbnb-filter-chip.active {
+    color: #222;
+    border-bottom-color: #222;
+}
+
+.tax-toggle {
+    border: 1px solid #dddddd;
+    border-radius: 999px;
+    padding: 10px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #222;
+    white-space: nowrap;
+}
+
+.tax-toggle input {
+    display: none;
+}
+
+.tax-toggle-slider {
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: #d0d0d0;
+    position: relative;
+    transition: background 0.2s ease;
+}
+
+.tax-toggle-slider::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.tax-toggle input:checked + .tax-toggle-slider {
+    background: #222;
+}
+
+.tax-toggle input:checked + .tax-toggle-slider::before {
+    transform: translateX(16px);
+}
+
+.no-listings-message {
+    margin-top: 6px;
+    color: #555;
+    font-weight: 600;
+}
+
+/* 1. The Card Container */
+.listing-card {
+    border: none !important; /* Remove default bootstrap border */
+    background-color: transparent !important;
+    margin-bottom: 2rem;
+    cursor: pointer; /* Show it's clickable */
+}
+
+/* 2. The Image Wrapper */
+/* We wrap the image to handle the heart icon positioning */
+.card-img-wrapper {
+    position: relative; /* Needed for absolute positioning of the heart */
+    aspect-ratio: 1 / 0.95; /* Airbnb uses a slightly square-ish ratio */
+    overflow: hidden;
+    border-radius: 12px; /* The signature rounded corners */
+}
+
+.card-img-top {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures image fills the square without stretching */
+    transition: transform 0.3s ease; /* Smooth zoom effect */
+}
+
+/* Optional: Slight zoom on hover like Airbnb */
+.listing-card:hover .card-img-top {
+    transform: scale(1.05); /* Subtle zoom */
+    opacity: 0.95;
+}
+
+/* 3. The Heart Icon Overlay */
+.card-heart {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: white;
+    font-size: 1.5rem;
+    z-index: 10;
+    /* Text shadow to make it visible on light images */
+    text-shadow: 0 0 5px rgba(0,0,0,0.3); 
+    transition: transform 0.2s;
+}
+
+.card-heart:hover {
+    transform: scale(1.1); /* Pop effect when hovering the heart */
+    color: #ff385c; /* Change to red/pink on click/hover if desired */
+}
+
+/* 4. Card Body (Text) */
+.card-body {
+    padding: 0.5rem 0 0 0 !important; /* Remove side padding, keep top gap */
+}
+
+.card-text {
+    font-size: 15px;
+    line-height: 1.4;
+    color: #222222;
+}
+
+.card-text b {
+    font-weight: 600; /* Semi-bold for title */
+    display: block; /* Forces title to own line */
+    margin-bottom: 2px;
+}
+
+/* 5. Pricing Styling */
+.price-text {
+    font-weight: 600; /* Bold price */
+    color: #222222;
+}
+
+.tax-info {
+    font-weight: 400;
+    color: #717171; /* Lighter grey for "/ night" */
+}
+
+.listing-link {
+    text-decoration: none;
+}
+
+@media (max-width: 992px) {
+    .airbnb-filter-shell {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .tax-toggle {
+        justify-content: space-between;
+    }
+
+    .airbnb-search-shell {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .price-pill {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 576px) {
+    .airbnb-filters {
+        gap: 18px;
+    }
+
+    .airbnb-filter-chip {
+        font-size: 0.7rem;
+    }
+
+    .airbnb-search-shell {
+        grid-template-columns: 1fr;
+        border-radius: 14px;
+    }
+
+    .price-pill {
+        grid-column: span 1;
+    }
+
+    .price-pill {
+        flex-wrap: wrap;
+        border-radius: 16px;
+    }
+
+    .clear-filters-btn {
+        min-height: 44px;
+    }
+}

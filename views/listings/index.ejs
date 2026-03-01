@@ -1,0 +1,88 @@
+<% layout("/layouts/boilerplate") %>
+
+<link rel="stylesheet" href="/css/listing.css?v=20260301-3">
+
+<div class="container-fluid mt-3">
+    <div class="airbnb-filter-shell">
+        <div class="airbnb-filters" id="airbnb-filters"></div>
+        <label class="tax-toggle">
+            <span>Display total before taxes</span>
+            <input type="checkbox" id="tax-toggle-input">
+            <span class="tax-toggle-slider"></span>
+        </label>
+    </div>
+
+    <div class="airbnb-search-shell">
+        <div class="filter-pill">
+            <i class="fa-solid fa-earth-americas"></i>
+            <select id="country-filter">
+                <option value="">All countries</option>
+            </select>
+        </div>
+
+        <div class="filter-pill">
+            <i class="fa-solid fa-location-dot"></i>
+            <select id="location-filter">
+                <option value="">All locations</option>
+            </select>
+        </div>
+
+        <div class="price-pill">
+            <span>Min</span>
+            <input id="min-price-filter" type="number" min="0" step="100">
+            <span>Max</span>
+            <input id="max-price-filter" type="number" min="0" step="100">
+        </div>
+
+        <button id="clear-filters-btn" type="button" class="clear-filters-btn">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Reset</span>
+        </button>
+    </div>
+
+    <div class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-1" id="listing-grid">
+        <% for (let listing of listings){ %>
+            <div
+                class="col mb-4 listing-item"
+                data-title="<%= listing.title %>"
+                data-location="<%= listing.location %>"
+                data-country="<%= listing.country %>"
+                data-price="<%= listing.price %>">
+                <a href="/listings/<%= listing._id %>" class="listing-link">
+                    <div class="card listing-card">
+                        <div class="card-img-wrapper">
+                            <img
+                                src="<%= listing.image.url && listing.image.url.trim() !== '' ? listing.image.url : 'https://images.unsplash.com/photo-1505691938895-1758d7feb511' %>"
+                                class="card-img-top"
+                                alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night" />
+                            <div class="card-heart">
+                                <i class="fa-regular fa-heart"></i>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <p class="card-text">
+                                <b><%= listing.title %></b>
+                                <span><%= listing.location %>, <%= listing.country %></span>
+                                <br>
+                                <span
+                                    class="price-text price-value"
+                                    data-base-price="<%= listing.price %>">&#8377; <%= listing.price.toLocaleString("en-IN") %></span>
+                                <span class="tax-info">/ night</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+    <p id="no-listings-message" class="no-listings-message d-none">
+        No listings match the selected filters.
+    </p>
+</div>
+
+<script src="/js/index.js?v=20260301-1"></script>
+
+
+

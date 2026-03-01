@@ -1,0 +1,92 @@
+<%- layout("/layouts/boilerplate") %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="card shadow-sm p-4">
+            <h2 class="mb-4 text-center">Edit Entry</h2>
+
+            <form action="/listings/<%= listing._id %>?_method=PUT" method="POST" novalidate class="needs-validation" enctype="multipart/form-data" >
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="title"
+                        name="listing[title]"
+                        value="<%= listing.title %>"
+                        required>
+                        <div class="invalid-feedback">Title looks good!</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea
+                        class="form-control"
+                        id="description"
+                        name="listing[description]"
+                        rows="3"
+                        required><%= listing.description %></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block">Current Image</label>
+                    <img src="<%= listing.image.url %>" alt="Current listing image" class="img-thumbnail mb-3" style="max-height: 220px;">
+                    <label for="image" class="form-label">Upload New Image (optional)</label>
+                    <input
+                        type="file"
+                        class="form-control"
+                        id="image"
+                        name="image"
+                        accept="image/*">
+                    <small class="text-muted">Leave empty to keep the current image.</small>
+                </div>
+
+                <!-- Price + Country same line -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <input
+                            class="form-control"
+                            id="price"
+                            name="listing[price]"
+                            value="<%= listing.price %>"
+                            required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="country" class="form-label">Country</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="country"
+                            name="listing[country]"
+                            value="<%= listing.country %>"
+                            required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="location" class="form-label">Location</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="location"
+                        name="listing[location]"
+                        value="<%= listing.location %>"
+                        required>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        Update Listing
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+

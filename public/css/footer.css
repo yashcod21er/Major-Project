@@ -1,0 +1,108 @@
+/* 1. Footer Container */
+footer {
+    background-color: #f7f7f7; /* Airbnb's signature light grey footer */
+    border-top: 1px solid #ebebeb; /* Subtle divider line */
+    color: #222222;
+    padding: 15px 0; /* Slim vertical padding */
+    margin-top: auto; /* Keeps footer at bottom if using flex-column on body */
+    font-size: 14px; /* Small, readable text */
+}
+
+/* 2. Flex Container (The .f-info div) */
+.f-info {
+    display: flex;
+    align-items: center; /* Vertically center everything */
+    justify-content: center; /* Fallback */
+    max-width: 1760px; /* Match your navbar width */
+    margin: 0 auto;
+    padding: 0 40px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+/* 3. Social Icons (Airbnb puts these on the Right) */
+.f-info-socials {
+    order: 3; /* Visually moves this to the far right */
+    margin-left: auto; /* Pushes it to the right edge */
+    display: flex;
+    gap: 20px; /* Space between icons */
+    font-size: 1.1rem;
+}
+
+.f-info-socials i {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.f-info-socials i:hover {
+    color: #000; /* Darker on hover */
+}
+
+/* 4. Copyright Text (Airbnb puts this on the Left) */
+.f-info div:nth-child(2) {
+    order: 1; /* Visually moves this to the far left */
+    margin-right: 10px; /* Space before the links */
+}
+
+/* 5. Links (Privacy, Terms, etc.) */
+.f-info-links {
+    order: 2; /* Sits next to copyright */
+    display: flex;
+    gap: 10px; /* Space between links */
+}
+
+.f-info-links a {
+    text-decoration: none;
+    color: #222222;
+    position: relative;
+    transition: color 0.2s;
+}
+
+/* The "Dot" separator effect between links (Airbnb style) */
+.f-info-links a::before {
+    content: "·";
+    margin-right: 10px;
+    color: #222;
+}
+
+/* Remove the dot from the first link if needed, or keep it as separator from copyright */
+.f-info-links a:hover {
+    text-decoration: underline; /* Standard Airbnb link hover */
+}
+
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 768px) {
+    .f-info {
+        flex-direction: column; /* Stack vertically */
+        gap: 15px; /* Space between rows */
+        padding: 20px;
+        text-align: center;
+    }
+
+    /* Reset the desktop reordering for mobile flow */
+    .f-info-socials, 
+    .f-info div:nth-child(2), 
+    .f-info-links {
+        order: unset; 
+        margin: 0;
+        width: 100%; /* Full width for centering */
+        justify-content: center;
+    }
+    
+    .f-info-socials {
+        gap: 30px; /* Bigger touch targets for icons */
+        margin-bottom: 10px;
+    }
+    
+    .f-info-links {
+        flex-direction: column; /* Stack links vertically on mobile */
+        gap: 8px;
+    }
+
+    .f-info-links a::before {
+        content: ""; /* Remove dots on mobile vertical stack */
+        margin: 0;
+    }
+}

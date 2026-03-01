@@ -1,0 +1,50 @@
+<%- layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/login.css">
+<div class="signup-container">
+    
+    <div class="row justify-content-center w-100">
+        
+        <div class="col-md-8 col-lg-5">
+            
+            <div class="card signup-card">
+                <div class="card-body p-5">
+                    
+                    <h2 class="signup-heading">Welcome Back</h2>
+                    <p class="signup-subtext">Login to access your dashboard</p>
+
+                    <form action="/login" method="post" class="needs-validation" novalidate>
+                        
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="form-control custom-input" 
+                                placeholder="Enter your email"
+                                required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-control custom-input" 
+                                placeholder="Enter your password"
+                                required>
+                        </div>
+                        
+                        <button class="btn btn-signup w-100">Log In</button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="small text-muted">Don't have an account? <a href="/signup" class="login-link">Sign Up</a></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

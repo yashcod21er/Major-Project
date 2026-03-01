@@ -1,0 +1,117 @@
+/* =========================================
+   LOGIN & SIGN UP SHARED STYLES
+========================================= */
+
+/* 1. The Container Background */
+.signup-container {
+    min-height: 80vh; /* Takes up most of the screen */
+    display: flex;
+    align-items: center; /* Vertically center the card */
+    justify-content: center;
+    /* Soft gradient background */
+    background: radial-gradient(circle at top left, #fff0f3 0%, #fff 100%);
+    padding: 40px 20px;
+}
+
+/* Fix for the "Squashed" Text Issue */
+.signup-container .row {
+    width: 100%;
+}
+
+/* 2. The Glass Card */
+.signup-card {
+    border: none;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+    backdrop-filter: blur(20px);          /* Frosted glass effect */
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08); /* Deep, soft shadow */
+    overflow: hidden;
+    animation: slideUp 0.8s ease-out forwards; /* Entrance animation */
+}
+
+/* 3. Typography */
+.signup-heading {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    color: #222;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.signup-subtext {
+    text-align: center;
+    color: #717171;
+    font-size: 0.95rem;
+    margin-bottom: 35px;
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #484848;
+    margin-bottom: 8px;
+    margin-left: 4px; 
+}
+
+/* 4. Beautiful Inputs */
+.custom-input {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 14px 18px; 
+    font-size: 1rem;
+    color: #222;
+    transition: all 0.2s ease;
+}
+
+.custom-input:focus {
+    background-color: #fff;
+    border-color: #ff385c; /* Brand color border */
+    box-shadow: 0 0 0 4px rgba(255, 56, 92, 0.1); /* Soft glow */
+}
+
+.custom-input::placeholder {
+    color: #aaa;
+    font-size: 0.95rem;
+}
+
+/* 5. The Gradient Button */
+.btn-signup {
+    background: linear-gradient(90deg, #ff385c 0%, #d90b3e 100%);
+    border: none;
+    border-radius: 50px; /* Pill shape */
+    padding: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 56, 92, 0.3);
+}
+
+.btn-signup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 56, 92, 0.5);
+    color: #fff;
+}
+
+/* 6. Links (Login/Signup toggle) */
+.login-link {
+    color: #ff385c;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.login-link:hover {
+    color: #d90b3e;
+    text-decoration: underline;
+}
+
+/* Entrance Animation */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}

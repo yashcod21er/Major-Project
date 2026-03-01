@@ -1,0 +1,54 @@
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<nav class="navbar navbar-expand-md sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/listings">
+      <i class="fa-regular fa-compass"></i>
+      <p>UrbanStay</p>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-left-link">
+        <a class="nav-link" href="/listings">Explore</a>
+      </div>
+
+      <div class="navbar-search-wrap">
+        <form class="navbar-airbnb-search" action="/listings" method="GET" role="search">
+          <span class="search-static">Anywhere</span>
+          <span class="search-divider"></span>
+          <span class="search-static">Any week</span>
+          <span class="search-divider"></span>
+          <input
+            id="navbar-search-input"
+            name="q"
+            type="search"
+            placeholder="Search stays"
+            value="<%= typeof searchQuery === 'string' ? searchQuery : '' %>">
+          <button type="submit" class="search-btn" aria-label="Search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </form>
+      </div>
+
+      <div class="navbar-right-link">
+        <a class="nav-link" href="/listings/new">Airbnb your home</a>
+      </div>
+
+      <div class="navbar-nav navbar-auth-links">
+        <% if(!currentUser) { %>
+          <a class="nav-link" href="/user/signup"><b>Sign Up</b></a>
+          <a class="nav-link" href="/user/login"><b>Login</b></a>
+        <% } else { %>
+          <a class="nav-link user-initial-link" href="/profile" aria-label="Profile">
+            <span class="user-initial-badge"><%= (currentUser.username && currentUser.username.charAt(0).toUpperCase()) || "U" %></span>
+          </a>
+          <a class="nav-link" href="/user/logout">Logout</a> 
+        <% } %>
+      </div>
+    </div>
+  </div>
+</nav>
