@@ -1,6 +1,6 @@
 <% layout("/layouts/boilerplate") %>
 
-<link rel="stylesheet" href="/css/listing.css?v=20260301-3">
+<link rel="stylesheet" href="/css/listing.css?v=20260301-4">
 
 <div class="container-fluid mt-3">
     <div class="airbnb-filter-shell">
@@ -40,7 +40,7 @@
         </button>
     </div>
 
-    <div class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-1" id="listing-grid">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4" id="listing-grid">
         <% for (let listing of listings){ %>
             <div
                 class="col mb-4 listing-item"

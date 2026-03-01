@@ -206,16 +206,50 @@
 }
 
 @media (min-width: 768px) and (max-width: 1199px) {
-    .navbar-airbnb-search {
-        min-width: 340px;
+    .navbar {
+        height: auto;
+        min-height: 94px;
     }
 
-    .navbar-left-link {
-        left: 150px;
+    .container-fluid {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+
+    .collapse.navbar-collapse {
+        min-height: auto;
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        row-gap: 8px;
+        padding: 12px 0 14px;
+    }
+
+    .navbar-left-link,
+    .navbar-auth-links {
+        position: static;
+        transform: none;
     }
 
     .navbar-right-link {
         display: none;
+    }
+
+    .navbar-search-wrap {
+        position: static;
+        transform: none;
+        order: 3;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 2px;
+    }
+
+    .navbar-airbnb-search {
+        min-width: 100%;
+        width: 100%;
+        max-width: 680px;
     }
 }
 
@@ -229,7 +263,7 @@
 
     .navbar-collapse {
         background-color: #ffffff;
-        padding: 20px;
+        padding: 14px 12px;
         border-top: 1px solid #ebebeb;
         margin-top: 10px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
@@ -249,19 +283,52 @@
     }
 
     .container-fluid {
-        padding-left: 20px !important;
-        padding-right: 20px !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .navbar-brand p {
+        font-size: 1.25rem;
     }
 
     .navbar-search-wrap {
         position: static;
         transform: none;
-        margin: 10px 0 10px;
+        margin: 8px 0 10px;
+        width: 100%;
     }
 
     .navbar-airbnb-search {
         min-width: 100%;
         width: 100%;
+        height: 46px;
+        padding: 0 6px 0 12px;
+        gap: 8px;
+    }
+
+    .navbar-airbnb-search .search-static:nth-child(3),
+    .navbar-airbnb-search .search-divider:nth-child(4) {
+        display: none;
+    }
+
+    .search-static {
+        font-size: 0.78rem;
+    }
+
+    #navbar-search-input {
+        min-width: 80px;
+        font-size: 0.8rem;
+    }
+
+    .search-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .navbar-left-link .nav-link,
+    .navbar-right-link .nav-link {
+        font-size: 0.92rem;
+        padding: 10px 0 !important;
     }
 
     .navbar-left-link,
@@ -270,6 +337,14 @@
         transform: none;
         display: flex;
         justify-content: center;
+    }
+
+    .navbar-auth-links {
+        position: static;
+        transform: none;
+        width: 100%;
+        justify-content: center;
+        margin-top: 4px;
     }
 }
 

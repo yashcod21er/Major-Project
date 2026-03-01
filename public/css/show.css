@@ -209,6 +209,11 @@ a {
     transition: all 0.2s ease;
 }
 
+.btns .edit-btn,
+.btns .delete-btn {
+    min-width: 130px;
+}
+
 /* Primary Button (Gradient) */
 .btns .btn-dark, 
 .btns .btn-primary { 
@@ -517,4 +522,94 @@ footer {
     color: #fff;              /* White text */
     transform: translateY(-1px);
     cursor: pointer;
+}
+
+@media (max-width: 992px) {
+    .unique-review-wrapper .reviews-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 84px;
+    }
+
+    .navbar {
+        height: auto;
+        min-height: 86px;
+        align-items: stretch;
+    }
+
+    .container-fluid {
+        padding: 0 14px !important;
+    }
+
+    .navbar-collapse {
+        width: 100%;
+        margin-top: 8px;
+        padding: 12px;
+        border-top: 1px solid #ebebeb;
+        background: #fff;
+    }
+
+    .listing-card h3,
+    .listing-card h2 {
+        font-size: 1.7rem;
+    }
+
+    .show-img {
+        height: 280px;
+        border-radius: 12px;
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
+
+    .listing-card {
+        padding: 0;
+        margin-bottom: 32px;
+    }
+
+    .map-heading {
+        font-size: 1.35rem;
+    }
+
+    #listing-map {
+        height: 240px;
+    }
+
+    .unique-review-wrapper {
+        margin-top: 28px;
+        padding: 8px 0 0;
+    }
+
+    .unique-review-wrapper .review-form-container {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .unique-review-wrapper .review-heading {
+        font-size: 1.35rem;
+        margin-bottom: 18px;
+    }
+
+    .unique-review-wrapper .reviews-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .unique-review-wrapper .card-body {
+        padding: 18px;
+    }
+
+    .starability-grow label {
+        width: 28px;
+        height: 28px;
+    }
+
+    .starability-grow label::before {
+        font-size: 28px;
+    }
 }
