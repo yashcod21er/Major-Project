@@ -7,7 +7,13 @@ module.exports.isLoggedIn = (req, res, next) => {
         req.session.redirectTo = req.originalUrl;
         req.flash("error", "You must be signed in to do that!");
         return res.redirect('/login');
-    }   
+    }
+
+    if (req.user?.isSuspended) {
+        req.flash("error", "Your account is suspended. Contact support for help.");
+        return res.redirect("/listings");
+    }
+
     next();
 }
 
@@ -44,8 +50,17 @@ module.exports.isReviewAuthor = async (req, res, next) => {
     }
 
     if (!review.author || !review.author.equals(req.user._id)) {
-        req.flash("error", "You don't have permission to delete this review!");
+        req.flash("error", "You don't have permission to modify this review!");
         return res.redirect(`/listings/${id}`);
+    }
+
+    next();
+};
+
+module.exports.isAdmin = (req, res, next) => {
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.isAdmin) {
+        req.flash("error", "Admin access required.");
+        return res.redirect("/listings");
     }
 
     next();

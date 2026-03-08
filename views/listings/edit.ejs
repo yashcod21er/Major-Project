@@ -1,13 +1,12 @@
-<%- layout("/layouts/boilerplate") %>
+<% layout("/layouts/boilerplate") %>
 
 <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-
+    <div class="col-md-9 col-lg-7">
         <div class="card shadow-sm p-4">
-            <h2 class="mb-4 text-center">Edit Entry</h2>
+            <h2 class="mb-2 text-center">Edit Entry</h2>
+            <p class="text-center text-muted mb-4">Update the stay details and add more photos to the gallery.</p>
 
-            <form action="/listings/<%= listing._id %>?_method=PUT" method="POST" novalidate class="needs-validation" enctype="multipart/form-data" >
-
+            <form action="/listings/<%= listing._id %>?_method=PUT" method="POST" novalidate class="needs-validation" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="title" class="form-label">Title</label>
                     <input
@@ -17,7 +16,7 @@
                         name="listing[title]"
                         value="<%= listing.title %>"
                         required>
-                        <div class="invalid-feedback">Title looks good!</div>
+                    <div class="invalid-feedback">Please enter a title.</div>
                 </div>
 
                 <div class="mb-3">
@@ -26,32 +25,40 @@
                         class="form-control"
                         id="description"
                         name="listing[description]"
-                        rows="3"
+                        rows="4"
                         required><%= listing.description %></textarea>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label d-block">Current Image</label>
-                    <img src="<%= listing.image.url %>" alt="Current listing image" class="img-thumbnail mb-3" style="max-height: 220px;">
-                    <label for="image" class="form-label">Upload New Image (optional)</label>
+                    <label class="form-label d-block">Current Gallery</label>
+                    <div class="row g-2">
+                        <% galleryImages.forEach((image) => { %>
+                            <div class="col-6 col-md-4">
+                                <img src="<%= image.url %>" alt="Current listing image" class="img-thumbnail mb-2" style="height: 150px; width: 100%; object-fit: cover;">
+                            </div>
+                        <% }); %>
+                    </div>
+                    <label for="images" class="form-label mt-3">Upload More Images</label>
                     <input
                         type="file"
                         class="form-control"
-                        id="image"
-                        name="image"
-                        accept="image/*">
-                    <small class="text-muted">Leave empty to keep the current image.</small>
+                        id="images"
+                        name="images"
+                        accept="image/*"
+                        multiple>
+                    <small class="text-muted">New uploads are added to the existing gallery.</small>
                 </div>
 
-                <!-- Price + Country same line -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="price" class="form-label">Price</label>
                         <input
+                            type="number"
                             class="form-control"
                             id="price"
                             name="listing[price]"
                             value="<%= listing.price %>"
+                            min="0"
                             required>
                     </div>
 
@@ -78,15 +85,50 @@
                         required>
                 </div>
 
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-danger btn-lg">
-                        Update Listing
-                    </button>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="cancellationPolicy" class="form-label">Cancellation policy</label>
+                        <select class="form-select" id="cancellationPolicy" name="listing[cancellationPolicy]">
+                            <option value="flexible" <%= listing.cancellationPolicy === "flexible" ? "selected" : "" %>>Flexible</option>
+                            <option value="moderate" <%= listing.cancellationPolicy === "moderate" ? "selected" : "" %>>Moderate</option>
+                            <option value="strict" <%= listing.cancellationPolicy === "strict" ? "selected" : "" %>>Strict</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label for="hostBadgeText" class="form-label">Host highlight</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="hostBadgeText"
+                            name="listing[hostBadgeText]"
+                            maxlength="80"
+                            value="<%= listing.hostBadgeText || '' %>"
+                            placeholder="Super responsive host">
+                    </div>
                 </div>
 
+                <div class="mb-4">
+                    <label class="form-label d-block">Amenities</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <% amenityOptions.forEach((amenity) => { %>
+                            <label class="form-check-label border rounded-pill px-3 py-2 bg-light">
+                                <input
+                                    class="form-check-input me-2"
+                                    type="checkbox"
+                                    name="listing[amenities]"
+                                    value="<%= amenity %>"
+                                    <%= (listing.amenities || []).includes(amenity) ? "checked" : "" %>>
+                                <%= amenity %>
+                            </label>
+                        <% }); %>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-danger btn-lg">Update Listing</button>
+                </div>
             </form>
         </div>
-
     </div>
 </div>
-

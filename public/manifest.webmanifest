@@ -1,0 +1,23 @@
+{
+  "name": "UrbanStay",
+  "short_name": "UrbanStay",
+  "start_url": "/listings",
+  "display": "standalone",
+  "background_color": "#fbfbfb",
+  "theme_color": "#ff385c",
+  "description": "Discover, save, and book stays with UrbanStay.",
+  "icons": [
+    {
+      "src": "/assets/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

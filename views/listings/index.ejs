@@ -1,6 +1,6 @@
 <% layout("/layouts/boilerplate") %>
 
-<link rel="stylesheet" href="/css/listing.css?v=20260301-5">
+<link rel="stylesheet" href="/css/listing.css?v=20260308-4">
 <noscript>
     <style>
         #listing-skeletons { display: none !important; }
@@ -8,45 +8,213 @@
     </style>
 </noscript>
 
-<div class="container-fluid mt-3 listing-page-shell">
+<%
+    const currentFilters = initialFilters || {};
+    const buildPageHref = (pageNumber) => {
+        const params = new URLSearchParams();
+        if (searchQuery) params.set("q", searchQuery);
+        if (selectedSort) params.set("sort", selectedSort);
+        if (currentFilters.category && currentFilters.category !== "all") params.set("category", currentFilters.category);
+        if (currentFilters.country) params.set("country", currentFilters.country);
+        if (currentFilters.location) params.set("location", currentFilters.location);
+        if (currentFilters.minPrice) params.set("minPrice", currentFilters.minPrice);
+        if (currentFilters.maxPrice) params.set("maxPrice", currentFilters.maxPrice);
+        if (currentFilters.checkIn) params.set("checkIn", currentFilters.checkIn);
+        if (currentFilters.checkOut) params.set("checkOut", currentFilters.checkOut);
+        (currentFilters.amenities || []).forEach((amenity) => params.append("amenities", amenity));
+        params.set("page", String(pageNumber));
+        return `/listings?${params.toString()}`;
+    };
+%>
+
+<div
+    class="container-fluid mt-3 listing-page-shell"
+    id="listing-page-shell"
+    data-initial-filters='<%- JSON.stringify(currentFilters) %>'>
+    <div class="listing-topbar">
+        <div class="listing-hero">
+            <p class="listing-kicker">Discover</p>
+            <h2 class="listing-page-title">Find your next stay</h2>
+            <div class="listing-feature-strip" aria-label="Highlights">
+                <span class="listing-feature-pill">
+                    <i class="fa-regular fa-heart"></i>
+                    Saved filters
+                </span>
+                <span class="listing-feature-pill">
+                    <i class="fa-solid fa-star"></i>
+                    Verified ratings
+                </span>
+                <span class="listing-feature-pill">
+                    <i class="fa-solid fa-credit-card"></i>
+                    Secure checkout
+                </span>
+                <% if (currentUser) { %>
+                    <a href="/profile#my-listings" class="listing-feature-pill listing-feature-link">
+                        <i class="fa-solid fa-house"></i>
+                        My listings
+                    </a>
+                <% } %>
+            </div>
+        </div>
+
+        <form method="GET" action="/listings" class="listing-sort-form" id="listing-sort-form">
+            <input type="hidden" name="q" value="<%= searchQuery || '' %>" data-sort-hidden="q">
+            <input type="hidden" name="category" value="<%= currentFilters.category || 'all' %>" data-sort-hidden="category">
+            <input type="hidden" name="country" value="<%= currentFilters.country || '' %>" data-sort-hidden="country">
+            <input type="hidden" name="location" value="<%= currentFilters.location || '' %>" data-sort-hidden="location">
+            <input type="hidden" name="minPrice" value="<%= currentFilters.minPrice || '' %>" data-sort-hidden="minPrice">
+            <input type="hidden" name="maxPrice" value="<%= currentFilters.maxPrice || '' %>" data-sort-hidden="maxPrice">
+            <input type="hidden" name="checkIn" value="<%= currentFilters.checkIn || '' %>">
+            <input type="hidden" name="checkOut" value="<%= currentFilters.checkOut || '' %>">
+            <% (currentFilters.amenities || []).forEach((amenity) => { %>
+                <input type="hidden" name="amenities" value="<%= amenity %>">
+            <% }); %>
+            <input type="hidden" name="page" value="1">
+            <label for="sort" class="sort-label">Sort by</label>
+            <select id="sort" name="sort" class="sort-select" onchange="this.form.submit()">
+                <% for (const [sortKey, sortOption] of Object.entries(sortOptions)) { %>
+                    <option value="<%= sortKey %>" <%= selectedSort === sortKey ? "selected" : "" %>><%= sortOption.label %></option>
+                <% } %>
+            </select>
+        </form>
+    </div>
+
     <div class="airbnb-filter-shell">
-        <div class="airbnb-filters" id="airbnb-filters"></div>
+        <div class="airbnb-filter-rail">
+            <button
+                type="button"
+                class="filter-rail-arrow filter-rail-arrow-left"
+                id="filter-rail-prev"
+                aria-label="Scroll filters left">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="airbnb-filters" id="airbnb-filters"></div>
+            <button
+                type="button"
+                class="filter-rail-arrow filter-rail-arrow-right"
+                id="filter-rail-next"
+                aria-label="Scroll filters right">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
         <label class="tax-toggle">
             <span>Display total before taxes</span>
             <input type="checkbox" id="tax-toggle-input">
             <span class="tax-toggle-slider"></span>
         </label>
+        <button
+            type="button"
+            class="filter-panel-toggle"
+            id="filter-panel-toggle"
+            aria-expanded="false"
+            aria-controls="advanced-filters-panel">
+            <span>Filters</span>
+            <i class="fa-solid fa-chevron-down"></i>
+        </button>
     </div>
 
-    <div class="airbnb-search-shell">
-        <div class="filter-pill">
-            <i class="fa-solid fa-earth-americas"></i>
-            <select id="country-filter">
-                <option value="">All countries</option>
-            </select>
-            <span class="filter-badge" id="country-filter-badge">0</span>
+    <div
+        class="advanced-filters-panel is-collapsed"
+        id="advanced-filters-panel"
+        data-has-active-filters="<%= Boolean(currentFilters.country || currentFilters.location || currentFilters.minPrice || currentFilters.maxPrice || currentFilters.checkIn || currentFilters.checkOut || (currentFilters.amenities || []).length) %>">
+        <div class="airbnb-search-shell">
+            <div class="filter-pill">
+                <i class="fa-solid fa-earth-americas"></i>
+                <select id="country-filter">
+                    <option value="">All countries</option>
+                </select>
+                <span class="filter-badge" id="country-filter-badge">0</span>
+            </div>
+
+            <div class="filter-pill">
+                <i class="fa-solid fa-location-dot"></i>
+                <select id="location-filter">
+                    <option value="">All locations</option>
+                </select>
+                <span class="filter-badge" id="location-filter-badge">0</span>
+            </div>
+
+            <div class="price-pill">
+                <span>Min</span>
+                <input id="min-price-filter" type="number" min="0" step="100">
+                <span>Max</span>
+                <input id="max-price-filter" type="number" min="0" step="100">
+            </div>
+
+            <button id="clear-filters-btn" type="button" class="clear-filters-btn">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Reset</span>
+                <span id="active-filters-badge" class="active-filters-badge">0</span>
+            </button>
         </div>
 
-        <div class="filter-pill">
-            <i class="fa-solid fa-location-dot"></i>
-            <select id="location-filter">
-                <option value="">All locations</option>
-            </select>
-            <span class="filter-badge" id="location-filter-badge">0</span>
-        </div>
+        <section class="availability-panel">
+            <div class="listing-utility-row">
+                <div class="listing-utility-copy-group">
+                    <p class="listing-utility-eyebrow">Refine stays</p>
+                    <p class="listing-utility-copy">Choose dates and amenities for the current results.</p>
+                </div>
+                <% if (currentUser) { %>
+                    <form method="POST" action="/saved-searches" class="save-search-form" id="save-search-form">
+                        <input type="hidden" name="search[q]" value="<%= searchQuery || '' %>" data-save-input="q">
+                        <input type="hidden" name="search[sort]" value="<%= selectedSort || 'newest' %>" data-save-input="sort">
+                        <input type="hidden" name="search[category]" value="<%= currentFilters.category || 'all' %>" data-save-input="category">
+                        <input type="hidden" name="search[country]" value="<%= currentFilters.country || '' %>" data-save-input="country">
+                        <input type="hidden" name="search[location]" value="<%= currentFilters.location || '' %>" data-save-input="location">
+                        <input type="hidden" name="search[minPrice]" value="<%= currentFilters.minPrice || '' %>" data-save-input="minPrice">
+                        <input type="hidden" name="search[maxPrice]" value="<%= currentFilters.maxPrice || '' %>" data-save-input="maxPrice">
+                        <input type="hidden" name="search[label]" value="" data-save-input="label">
+                        <input type="hidden" name="search[alertsEnabled]" value="true">
+                        <button type="submit" class="save-search-btn">
+                            <i class="fa-regular fa-bookmark"></i>
+                            Save search
+                        </button>
+                    </form>
+                <% } else { %>
+                    <a href="/login" class="save-search-login-link">
+                        <i class="fa-regular fa-bookmark"></i>
+                        Save filters
+                    </a>
+                <% } %>
+            </div>
 
-        <div class="price-pill">
-            <span>Min</span>
-            <input id="min-price-filter" type="number" min="0" step="100">
-            <span>Max</span>
-            <input id="max-price-filter" type="number" min="0" step="100">
-        </div>
+            <form method="GET" action="/listings" class="availability-search-form">
+                <input type="hidden" name="q" value="<%= searchQuery || '' %>">
+                <input type="hidden" name="sort" value="<%= selectedSort || 'newest' %>">
+                <div class="availability-date-group">
+                    <div>
+                        <label for="checkIn">Check in</label>
+                        <input id="checkIn" type="date" name="checkIn" class="form-control" value="<%= currentFilters.checkIn || '' %>">
+                    </div>
+                    <div>
+                        <label for="checkOut">Check out</label>
+                        <input id="checkOut" type="date" name="checkOut" class="form-control" value="<%= currentFilters.checkOut || '' %>">
+                    </div>
+                </div>
+                <div class="amenity-filter-group">
+                    <% amenityOptions.forEach((amenity) => { %>
+                        <label class="amenity-pill">
+                            <input type="checkbox" name="amenities" value="<%= amenity %>" <%= (currentFilters.amenities || []).includes(amenity) ? "checked" : "" %>>
+                            <span><%= amenity %></span>
+                        </label>
+                    <% }); %>
+                </div>
+                <button type="submit" class="availability-submit-btn">Search stays</button>
+            </form>
+        </section>
+    </div>
 
-        <button id="clear-filters-btn" type="button" class="clear-filters-btn">
-            <i class="fa-solid fa-rotate-left"></i>
-            <span>Reset</span>
-            <span id="active-filters-badge" class="active-filters-badge">0</span>
-        </button>
+    <div class="listing-results-head">
+        <div>
+            <p class="listing-results-kicker">Browse</p>
+            <h3>All stays</h3>
+        </div>
+        <% if (currentUser) { %>
+            <a href="/profile#my-listings" class="listing-results-link">
+                View my listings
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        <% } %>
     </div>
 
     <div id="listing-skeletons" class="listing-skeletons">
@@ -63,38 +231,63 @@
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 d-none" id="listing-grid">
-        <% for (let listing of listings){ %>
+        <% for (let listing of listings) { %>
+            <% const coverImage = Array.isArray(listing.gallery) && listing.gallery.length ? listing.gallery[0] : listing.image; %>
+            <% const listingLikes = Array.isArray(listing.likes) ? listing.likes : []; %>
+            <% const isLiked = currentUser && listingLikes.some((likedUserId) => String(likedUserId) === String(currentUser._id)); %>
             <div
                 class="col mb-4 listing-item"
                 data-title="<%= listing.title %>"
                 data-location="<%= listing.location %>"
                 data-country="<%= listing.country %>"
                 data-price="<%= listing.price %>">
-                <a href="/listings/<%= listing._id %>" class="listing-link">
-                    <div class="card listing-card">
-                        <div class="card-img-wrapper">
+                <div class="card listing-card">
+                    <div class="card-img-wrapper">
+                        <a href="/listings/<%= listing._id %>" class="listing-link listing-media-link">
                             <img
-                                src="<%= listing.image.url && listing.image.url.trim() !== '' ? listing.image.url : 'https://images.unsplash.com/photo-1505691938895-1758d7feb511' %>"
+                                src="<%= coverImage && coverImage.url && coverImage.url.trim() !== '' ? coverImage.url : 'https://images.unsplash.com/photo-1505691938895-1758d7feb511' %>"
                                 class="card-img-top"
                                 alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night" />
-                            <div class="card-heart">
-                                <i class="fa-regular fa-heart"></i>
-                            </div>
+                        </a>
+
+                        <div class="listing-card-badges">
+                            <span class="rating-pill">
+                                <i class="fa-solid fa-star"></i>
+                                <%= listing.ratingAverage ? listing.ratingAverage.toFixed(1) : "New" %>
+                                <small>(<%= listing.reviewCount || 0 %>)</small>
+                            </span>
                         </div>
 
-                        <div class="card-body">
+                        <% if (currentUser) { %>
+                            <form method="POST" action="/listings/<%= listing._id %>/like" class="card-like-form">
+                                <input type="hidden" name="redirect" value="<%= returnTo || '/listings' %>">
+                                <button type="submit" class="card-heart card-heart-btn" aria-label="<%= isLiked ? 'Remove like' : 'Like this listing' %>">
+                                    <i class="<%= isLiked ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+                                    <span class="like-count"><%= listingLikes.length %></span>
+                                </button>
+                            </form>
+                        <% } else { %>
+                            <a href="/user/login" class="card-heart card-heart-login" aria-label="Log in to like listings">
+                                <i class="fa-regular fa-heart"></i>
+                                <span class="like-count"><%= listingLikes.length %></span>
+                            </a>
+                        <% } %>
+                    </div>
+
+                    <div class="card-body">
+                        <a href="/listings/<%= listing._id %>" class="listing-link">
                             <p class="card-text">
                                 <b><%= listing.title %></b>
                                 <span><%= listing.location %>, <%= listing.country %></span>
                                 <br>
-                                <span
-                                    class="price-text price-value"
-                                    data-base-price="<%= listing.price %>">&#8377; <%= listing.price.toLocaleString("en-IN") %></span>
+                                <span class="listing-meta-line"><%= listing.reviewCount || 0 %> reviews saved by guests</span>
+                                <br>
+                                <span class="price-text price-value" data-base-price="<%= listing.price %>">&#8377; <%= listing.price.toLocaleString("en-IN") %></span>
                                 <span class="tax-info">/ night</span>
                             </p>
-                        </div>
+                        </a>
                     </div>
-                </a>
+                </div>
             </div>
         <% } %>
     </div>
@@ -105,9 +298,37 @@
         <p>Try changing location, country, or price range.</p>
         <button type="button" id="no-results-reset-btn" class="no-results-reset-btn">Clear all filters</button>
     </div>
+
+    <% if (pagination.totalPages > 1) { %>
+        <nav class="pagination-shell" aria-label="Listing pages">
+            <a
+                href="<%= pagination.currentPage > 1 ? buildPageHref(pagination.currentPage - 1) : '#' %>"
+                class="pagination-link <%= pagination.currentPage === 1 ? 'disabled' : '' %>"
+                data-page-number="<%= pagination.currentPage - 1 %>">
+                <i class="fa-solid fa-arrow-left"></i>
+                Previous
+            </a>
+
+            <div class="pagination-pages">
+                <% for (let pageNumber = 1; pageNumber <= pagination.totalPages; pageNumber++) { %>
+                    <a
+                        href="<%= buildPageHref(pageNumber) %>"
+                        class="pagination-page <%= pageNumber === pagination.currentPage ? 'active' : '' %>"
+                        data-page-number="<%= pageNumber %>">
+                        <%= pageNumber %>
+                    </a>
+                <% } %>
+            </div>
+
+            <a
+                href="<%= pagination.currentPage < pagination.totalPages ? buildPageHref(pagination.currentPage + 1) : '#' %>"
+                class="pagination-link <%= pagination.currentPage === pagination.totalPages ? 'disabled' : '' %>"
+                data-page-number="<%= pagination.currentPage + 1 %>">
+                Next
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </nav>
+    <% } %>
 </div>
 
-<script src="/js/index.js?v=20260301-2"></script>
-
-
-
+<script src="/js/index.js?v=20260308-2"></script>

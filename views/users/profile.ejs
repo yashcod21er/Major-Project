@@ -1,0 +1,304 @@
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/profile.css?v=20260308-1">
+
+<%
+    const joinedDate = currentUserProfile?.createdAt
+        ? new Date(currentUserProfile.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+        : "";
+    const buildSavedSearchHref = (search) => {
+        const params = new URLSearchParams();
+        if (search.q) params.set("q", search.q);
+        if (search.sort) params.set("sort", search.sort);
+        if (search.category && search.category !== "all") params.set("category", search.category);
+        if (search.country) params.set("country", search.country);
+        if (search.location) params.set("location", search.location);
+        if (search.minPrice) params.set("minPrice", String(search.minPrice));
+        if (search.maxPrice) params.set("maxPrice", String(search.maxPrice));
+        return `/listings?${params.toString()}`;
+    };
+%>
+
+<div class="dashboard-shell">
+    <section class="dashboard-hero">
+        <div>
+            <p class="dashboard-kicker">Dashboard</p>
+            <h1><%= currentUserProfile.username %>'s workspace</h1>
+            <p class="dashboard-subtext">Manage saved searches, host reservations, payment history, trips, and the stays you want to revisit.</p>
+        </div>
+        <div class="dashboard-actions">
+            <a href="/listings/new" class="dashboard-primary-link">Create listing</a>
+            <a href="/wishlist" class="dashboard-secondary-link">Open wishlist</a>
+        </div>
+    </section>
+
+    <section class="host-summary-grid">
+        <article class="host-identity-card">
+            <div class="host-avatar"><%= currentUserProfile.username.charAt(0).toUpperCase() %></div>
+            <div>
+                <h2><%= currentUserProfile.username %></h2>
+                <p><%= currentUserProfile.email %></p>
+            </div>
+            <div class="host-badge-stack">
+                <span class="host-badge <%= currentUserProfile.hostProfile?.isVerified ? 'verified' : '' %>">
+                    <i class="fa-solid fa-shield-heart"></i>
+                    <%= currentUserProfile.hostProfile?.isVerified ? "Verified host" : "Verification pending" %>
+                </span>
+                <span class="host-mini-stat">Joined <%= joinedDate || "recently" %></span>
+                <span class="host-mini-stat">Response rate <%= Number(currentUserProfile.hostProfile?.responseRate || 94) %>%</span>
+                <span class="host-mini-stat">Replies <%= currentUserProfile.hostProfile?.responseTime || "within an hour" %></span>
+            </div>
+        </article>
+
+        <div class="stats-grid">
+            <article class="stat-card">
+                <span>Total listings</span>
+                <strong><%= stats.totalListings %></strong>
+            </article>
+            <article class="stat-card">
+                <span>Total reservations</span>
+                <strong><%= stats.totalReservations %></strong>
+            </article>
+            <article class="stat-card">
+                <span>Total earnings</span>
+                <strong>&#8377; <%= Number(stats.totalEarnings || 0).toLocaleString("en-IN") %></strong>
+            </article>
+            <article class="stat-card">
+                <span>Average rating</span>
+                <strong><%= stats.averageRating ? stats.averageRating.toFixed(1) : "New" %></strong>
+            </article>
+            <article class="stat-card">
+                <span>Total likes</span>
+                <strong><%= stats.totalLikes %></strong>
+            </article>
+            <article class="stat-card">
+                <span>Total reviews</span>
+                <strong><%= stats.totalReviews %></strong>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-section" id="saved-searches">
+        <div class="section-heading-row">
+            <h2>Saved searches</h2>
+            <span><%= savedSearches.length %> saved</span>
+        </div>
+        <% if (!savedSearches.length) { %>
+            <p class="empty-copy">Save filters from the listings page and they will appear here.</p>
+        <% } else { %>
+            <div class="saved-search-grid">
+                <% savedSearches.forEach((search) => { %>
+                    <article class="saved-search-card">
+                        <div class="saved-search-top">
+                            <div>
+                                <h3><%= search.label %></h3>
+                                <p><%= search.alertsEnabled ? "Alerts enabled" : "Alerts paused" %></p>
+                            </div>
+                            <span class="saved-search-category"><%= search.category || "all" %></span>
+                        </div>
+                        <div class="saved-search-tags">
+                            <% if (search.country) { %><span><%= search.country %></span><% } %>
+                            <% if (search.location) { %><span><%= search.location %></span><% } %>
+                            <% if (search.minPrice || search.maxPrice) { %><span>&#8377; <%= Number(search.minPrice || 0).toLocaleString("en-IN") %> - &#8377; <%= Number(search.maxPrice || 0).toLocaleString("en-IN") %></span><% } %>
+                            <% if (search.q) { %><span><%= search.q %></span><% } %>
+                        </div>
+                        <div class="saved-search-actions">
+                            <a href="<%= buildSavedSearchHref(search) %>" class="inline-link">Open search</a>
+                            <form action="/saved-searches/<%= search._id %>?_method=DELETE" method="POST">
+                                <button type="submit" class="mini-action-btn">Delete</button>
+                            </form>
+                        </div>
+                    </article>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Host reservations</h2>
+            <span><%= hostReservations.length %> bookings</span>
+        </div>
+        <% if (!hostReservations.length) { %>
+            <p class="empty-copy">No guest reservations yet.</p>
+        <% } else { %>
+            <div class="dashboard-table-shell">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Stay</th>
+                            <th>Guest</th>
+                            <th>Dates</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% hostReservations.forEach((reservation) => { %>
+                            <tr>
+                                <td><a href="/listings/<%= reservation.listingId %>"><%= reservation.listingTitle %></a></td>
+                                <td><%= reservation.guestName %></td>
+                                <td><%= formatDateLabel(reservation.startDate) %> to <%= formatDateLabel(reservation.endDate) %></td>
+                                <td><span class="status-pill <%= reservation.status %>"><%= reservation.status %></span></td>
+                                <td><%= reservation.paymentStatus %></td>
+                                <td>&#8377; <%= Number(reservation.totalPrice || 0).toLocaleString("en-IN") %></td>
+                                <td>
+                                    <% if (reservation.status !== "cancelled") { %>
+                                        <div class="saved-search-actions">
+                                            <a href="/listings/<%= reservation.listingId %>/bookings/<%= reservation.bookingId %>/invoice.pdf" class="inline-link">Invoice</a>
+                                            <form action="/listings/<%= reservation.listingId %>/bookings/<%= reservation.bookingId %>/cancel" method="POST">
+                                                <button type="submit" class="mini-action-btn">Cancel</button>
+                                            </form>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="table-note"><%= reservation.refundNote || "Cancelled" %></span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Payment history</h2>
+            <span><%= paymentHistory.length %> records</span>
+        </div>
+        <% if (!paymentHistory.length) { %>
+            <p class="empty-copy">Payment records will appear after reservations are paid.</p>
+        <% } else { %>
+            <div class="payment-grid">
+                <% paymentHistory.slice(0, 8).forEach((payment) => { %>
+                    <article class="payment-card">
+                        <div class="payment-card-top">
+                            <h3><%= payment.listingTitle %></h3>
+                            <span class="status-pill <%= payment.paymentStatus %>"><%= payment.paymentStatus %></span>
+                        </div>
+                        <p>Guest: <strong><%= payment.guestName %></strong></p>
+                        <p>Amount: <strong>&#8377; <%= Number(payment.totalPrice || 0).toLocaleString("en-IN") %></strong></p>
+                        <p>Order ID: <span class="mono-copy"><%= payment.orderId || "Manual booking" %></span></p>
+                        <p>Payment ID: <span class="mono-copy"><%= payment.paymentId || "Pending" %></span></p>
+                    </article>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Upcoming trips</h2>
+            <span><%= recentTrips.length %> bookings</span>
+        </div>
+        <% if (!recentTrips.length) { %>
+            <p class="empty-copy">You have not booked any stays yet.</p>
+        <% } else { %>
+            <div class="trip-grid">
+                <% recentTrips.forEach((trip) => { %>
+                    <article class="trip-card">
+                        <a href="/listings/<%= trip.listingId %>">
+                            <img src="<%= trip.coverImage && trip.coverImage.url ? trip.coverImage.url : '' %>" alt="<%= trip.title %>">
+                        </a>
+                        <div>
+                            <h3><%= trip.title %></h3>
+                            <p><%= trip.location %>, <%= trip.country %></p>
+                            <span><%= formatDateLabel(trip.startDate) %> to <%= formatDateLabel(trip.endDate) %></span>
+                            <div class="trip-meta-line">
+                                <span class="status-pill <%= trip.status %>"><%= trip.status %></span>
+                                <span>&#8377; <%= Number(trip.totalPrice || 0).toLocaleString("en-IN") %></span>
+                            </div>
+                            <% if (trip.status !== "cancelled") { %>
+                                <div class="saved-search-actions">
+                                    <a href="/listings/<%= trip.listingId %>/bookings/<%= trip.bookingId %>/invoice.pdf" class="inline-link">Invoice</a>
+                                    <form action="/listings/<%= trip.listingId %>/bookings/<%= trip.bookingId %>/cancel" method="POST" class="trip-cancel-form">
+                                        <button type="submit" class="mini-action-btn">Cancel trip</button>
+                                    </form>
+                                </div>
+                            <% } else { %>
+                                <p class="table-note">Payment status: <%= trip.paymentStatus %></p>
+                            <% } %>
+                        </div>
+                    </article>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="dashboard-section" id="my-listings">
+        <div class="section-heading-row">
+            <h2>My listings</h2>
+            <span><%= ownedListings.length %> total</span>
+        </div>
+        <% if (!ownedListings.length) { %>
+            <p class="empty-copy">You have not created any listings yet.</p>
+        <% } else { %>
+            <div class="dashboard-card-grid">
+                <% ownedListings.forEach((listing) => { %>
+                    <a href="/listings/<%= listing._id %>" class="dashboard-listing-card">
+                        <img src="<%= listing.coverImage && listing.coverImage.url ? listing.coverImage.url : listing.image.url %>" alt="<%= listing.title %>">
+                        <div class="dashboard-listing-copy">
+                            <h3><%= listing.title %></h3>
+                            <p><%= listing.location %>, <%= listing.country %></p>
+                            <div class="dashboard-card-meta">
+                                <span>&#8377; <%= Number(listing.price || 0).toLocaleString("en-IN") %>/night</span>
+                                <span><i class="fa-solid fa-star"></i> <%= listing.ratingAverage ? Number(listing.ratingAverage).toFixed(1) : "New" %></span>
+                            </div>
+                            <div class="dashboard-card-meta">
+                                <span><%= listing.reviewCount || 0 %> reviews</span>
+                                <span><%= Array.isArray(listing.likes) ? listing.likes.length : 0 %> saved</span>
+                            </div>
+                        </div>
+                    </a>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Recently viewed</h2>
+            <span><%= recentlyViewedListings.length %> stays</span>
+        </div>
+        <% if (!recentlyViewedListings.length) { %>
+            <p class="empty-copy">Browse a few listings and they will show up here.</p>
+        <% } else { %>
+            <div class="dashboard-card-grid">
+                <% recentlyViewedListings.forEach((listing) => { %>
+                    <a href="/listings/<%= listing._id %>" class="dashboard-listing-card compact">
+                        <img src="<%= listing.coverImage && listing.coverImage.url ? listing.coverImage.url : listing.image.url %>" alt="<%= listing.title %>">
+                        <div class="dashboard-listing-copy">
+                            <h3><%= listing.title %></h3>
+                            <p><%= listing.location %>, <%= listing.country %></p>
+                            <span class="wishlist-owner">Hosted by <%= listing.owner ? listing.owner.username : "Host" %></span>
+                        </div>
+                    </a>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Wishlist preview</h2>
+            <a href="/wishlist" class="inline-link">View all</a>
+        </div>
+        <% if (!wishlistListings.length) { %>
+            <p class="empty-copy">You have not saved any listings yet.</p>
+        <% } else { %>
+            <div class="dashboard-card-grid">
+                <% wishlistListings.slice(0, 4).forEach((listing) => { %>
+                    <a href="/listings/<%= listing._id %>" class="dashboard-listing-card compact">
+                        <img src="<%= listing.coverImage && listing.coverImage.url ? listing.coverImage.url : listing.image.url %>" alt="<%= listing.title %>">
+                        <div class="dashboard-listing-copy">
+                            <h3><%= listing.title %></h3>
+                            <p><%= listing.location %>, <%= listing.country %></p>
+                        </div>
+                    </a>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+</div>

@@ -14,6 +14,7 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-left-link">
         <a class="nav-link nav-main-link" href="/listings">Explore</a>
+        <a class="nav-link nav-main-link" href="/listings/explore">Map</a>
       </div>
 
       <div class="navbar-search-wrap">
@@ -44,6 +45,12 @@
           <a class="nav-link" href="/user/signup"><b>Sign Up</b></a>
           <a class="nav-link" href="/user/login"><b>Login</b></a>
         <% } else { %>
+          <a class="nav-link nav-badge-link" href="/chat"><b>Chat</b><% if (unreadChatCount > 0) { %><span class="nav-count-badge"><%= unreadChatCount %></span><% } %></a>
+          <a class="nav-link nav-badge-link" href="/notifications"><b>Alerts</b><% if (unreadNotificationCount > 0) { %><span class="nav-count-badge"><%= unreadNotificationCount %></span><% } %></a>
+          <a class="nav-link" href="/wishlist"><b>Wishlist</b></a>
+          <% if (currentUser.isAdmin) { %>
+            <a class="nav-link" href="/admin"><b>Admin</b></a>
+          <% } %>
           <a class="nav-link user-initial-link" href="/profile" aria-label="Profile">
             <span class="user-initial-badge"><%= (currentUser.username && currentUser.username.charAt(0).toUpperCase()) || "U" %></span>
           </a>

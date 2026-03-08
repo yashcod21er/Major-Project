@@ -1,3 +1,17 @@
+const roomImageLibrary = [
+  "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1505692952047-1a78307da8f2?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1505693536294-233fb141754c?auto=format&fit=crop&w=1200&q=80",
+];
+
+const poolImageLibrary = [
+  "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=80",
+];
+
 const sampleListings = [
   {
     title: "Cozy Beachfront Cottage",
@@ -349,4 +363,31 @@ const sampleListings = [
   },
 ];
 
-module.exports = { data: sampleListings };
+const buildGallery = (listing, index) => {
+  const roomUrl = roomImageLibrary[index % roomImageLibrary.length];
+  const poolUrl = poolImageLibrary[index % poolImageLibrary.length];
+
+  return [
+    listing.image,
+    {
+      filename: `room-image-${index + 1}`,
+      url: roomUrl,
+    },
+    {
+      filename: `pool-image-${index + 1}`,
+      url: poolUrl,
+    },
+  ];
+};
+
+module.exports = {
+  data: sampleListings.map((listing, index) => {
+    const gallery = buildGallery(listing, index);
+
+    return {
+      ...listing,
+      image: gallery[0],
+      gallery,
+    };
+  }),
+};

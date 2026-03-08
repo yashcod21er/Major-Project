@@ -1,0 +1,50 @@
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/profile.css?v=20260308-1">
+
+<div class="dashboard-shell">
+    <section class="dashboard-hero compact">
+        <div>
+            <p class="dashboard-kicker">Notifications</p>
+            <h1>Updates and alerts</h1>
+            <p class="dashboard-subtext">Chat updates, booking events, and admin actions appear here.</p>
+        </div>
+        <form action="/notifications/read-all" method="POST">
+            <button type="submit" class="dashboard-secondary-link">Mark all as read</button>
+        </form>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Recent activity</h2>
+            <span><%= notifications.length %> total</span>
+        </div>
+
+        <% if (!notifications.length) { %>
+            <p class="empty-copy">No notifications yet.</p>
+        <% } else { %>
+            <div class="saved-search-grid">
+                <% notifications.forEach((notification) => { %>
+                    <article class="saved-search-card">
+                        <div class="saved-search-top">
+                            <div>
+                                <h3><%= notification.title %></h3>
+                                <p><%= notification.body %></p>
+                            </div>
+                            <span class="saved-search-category"><%= notification.readAt ? "Read" : "Unread" %></span>
+                        </div>
+                        <div class="saved-search-actions">
+                            <% if (notification.link) { %>
+                                <a href="<%= notification.link %>" class="inline-link">Open</a>
+                            <% } %>
+                            <% if (!notification.readAt) { %>
+                                <form action="/notifications/<%= notification._id %>/read" method="POST">
+                                    <button type="submit" class="mini-action-btn">Mark read</button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </article>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+</div>

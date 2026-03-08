@@ -83,6 +83,12 @@ a:focus-visible {
     transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
+.navbar > .container-fluid {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .navbar:hover {
     box-shadow: var(--shadow-sm);
     border-bottom-color: var(--color-border-strong);
@@ -136,6 +142,27 @@ a:focus-visible {
     background-color: #f4f4f4;
     color: var(--color-text) !important;
     transform: translateY(-1px);
+}
+
+.nav-badge-link {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--color-brand);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
 }
 
 .nav-main-link {
@@ -251,6 +278,7 @@ a:focus-visible {
     border: 1px solid var(--color-border) !important;
     border-radius: var(--radius-sm);
     padding: 6px 9px;
+    margin-left: auto;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -262,34 +290,31 @@ a:focus-visible {
     box-shadow: var(--shadow-focus) !important;
 }
 
-/* Desktop center */
 @media (min-width: 768px) {
     .navbar-brand {
-        position: absolute;
-        left: 40px;
-        top: 50%;
-        transform: translateY(-50%);
+        position: static;
+        transform: none;
+        flex-shrink: 0;
     }
 
     .collapse.navbar-collapse {
-        width: 100%;
-        justify-content: center;
-        position: static;
+        flex: 1;
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
         min-height: 86px;
     }
 
-    .navbar-left-link {
-        position: absolute;
-        left: 236px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    .navbar-right-link {
-        position: absolute;
-        right: 220px;
-        top: 50%;
-        transform: translateY(-50%);
+    .navbar-left-link,
+    .navbar-right-link,
+    .navbar-auth-links {
+        position: static;
+        transform: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
     }
 
     .navbar-left-link .nav-link,
@@ -299,15 +324,19 @@ a:focus-visible {
     }
 
     .navbar-airbnb-search {
-        min-width: 430px;
+        min-width: 0;
+        width: min(100%, 520px);
     }
 
-    .navbar-auth-links {
-        position: absolute;
-        right: 22px;
-        top: 50%;
-        transform: translateY(-50%);
-        margin-left: 0;
+    .navbar-search-wrap {
+        position: static;
+        left: auto;
+        top: auto;
+        transform: none;
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        justify-content: center;
     }
 }
 
@@ -323,40 +352,16 @@ a:focus-visible {
     }
 
     .collapse.navbar-collapse {
-        min-height: auto;
-        display: flex !important;
+        min-height: 0;
         flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
         row-gap: 6px;
         padding: 8px 0 10px;
     }
 
     .navbar-left-link,
+    .navbar-right-link,
     .navbar-auth-links {
-        position: static;
-        transform: none;
-    }
-
-    .navbar-right-link {
-        display: none;
-    }
-
-    .navbar-search-wrap {
-        position: static;
-        transform: none;
-        order: 2;
         width: auto;
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        margin-top: 0;
-    }
-
-    .navbar-airbnb-search {
-        min-width: 320px;
-        width: clamp(320px, 48vw, 560px);
-        max-width: 560px;
     }
 }
 
@@ -366,6 +371,10 @@ a:focus-visible {
         height: auto;
         min-height: 86px;
         padding: 10px 0;
+    }
+
+    .navbar > .container-fluid {
+        flex-wrap: wrap;
     }
 
     .navbar-collapse {
@@ -461,6 +470,22 @@ body{
     min-height: 100vh;
 }
 
-.container{
+.page-shell{
+    width: min(1280px, calc(100% - 32px));
+    margin: 0 auto;
     flex: 1;
+    padding: 20px 0 28px;
+}
+
+.page-shell > .container-fluid {
+    width: 100%;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+@media (max-width: 767px) {
+    .page-shell {
+        width: min(1280px, calc(100% - 24px));
+        padding-top: 16px;
+    }
 }

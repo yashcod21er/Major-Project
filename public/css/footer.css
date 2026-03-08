@@ -1,108 +1,146 @@
-/* 1. Footer Container */
-footer {
-    background-color: #f7f7f7; /* Airbnb's signature light grey footer */
-    border-top: 1px solid #ebebeb; /* Subtle divider line */
-    color: #222222;
-    padding: 15px 0; /* Slim vertical padding */
-    margin-top: auto; /* Keeps footer at bottom if using flex-column on body */
-    font-size: 14px; /* Small, readable text */
+.site-footer {
+    margin-top: auto;
+    border-top: 1px solid #e9e9e9;
+    background:
+        radial-gradient(circle at top left, rgba(255, 56, 92, 0.08), transparent 28%),
+        linear-gradient(180deg, #fbfbfb 0%, #f4f4f4 100%);
+    color: #1f1f1f;
 }
 
-/* 2. Flex Container (The .f-info div) */
-.f-info {
-    display: flex;
-    align-items: center; /* Vertically center everything */
-    justify-content: center; /* Fallback */
-    max-width: 1760px; /* Match your navbar width */
+.footer-shell {
+    width: min(1280px, calc(100% - 32px));
     margin: 0 auto;
-    padding: 0 40px;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+    padding: 34px 0 20px;
 }
 
-/* 3. Social Icons (Airbnb puts these on the Right) */
-.f-info-socials {
-    order: 3; /* Visually moves this to the far right */
-    margin-left: auto; /* Pushes it to the right edge */
+.footer-top {
+    display: grid;
+    grid-template-columns: minmax(260px, 1.1fr) minmax(0, 2fr);
+    gap: 32px;
+    padding-bottom: 28px;
+}
+
+.footer-brand-block {
+    max-width: 360px;
+}
+
+.footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #111;
+}
+
+.footer-brand i {
+    color: var(--color-brand);
+    font-size: 1.45rem;
+}
+
+.footer-tagline {
+    margin: 16px 0 20px;
+    color: #5e5e5e;
+    line-height: 1.7;
+}
+
+.footer-socials {
     display: flex;
-    gap: 20px; /* Space between icons */
-    font-size: 1.1rem;
+    gap: 12px;
 }
 
-.f-info-socials i {
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.f-info-socials i:hover {
-    color: #000; /* Darker on hover */
-}
-
-/* 4. Copyright Text (Airbnb puts this on the Left) */
-.f-info div:nth-child(2) {
-    order: 1; /* Visually moves this to the far left */
-    margin-right: 10px; /* Space before the links */
-}
-
-/* 5. Links (Privacy, Terms, etc.) */
-.f-info-links {
-    order: 2; /* Sits next to copyright */
-    display: flex;
-    gap: 10px; /* Space between links */
-}
-
-.f-info-links a {
-    text-decoration: none;
-    color: #222222;
-    position: relative;
-    transition: color 0.2s;
-}
-
-/* The "Dot" separator effect between links (Airbnb style) */
-.f-info-links a::before {
-    content: "·";
-    margin-right: 10px;
+.footer-socials a {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dddddd;
+    background: rgba(255, 255, 255, 0.86);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: #222;
+    text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-/* Remove the dot from the first link if needed, or keep it as separator from copyright */
-.f-info-links a:hover {
-    text-decoration: underline; /* Standard Airbnb link hover */
+.footer-socials a:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-brand);
+    color: var(--color-brand);
 }
 
+.footer-links-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+}
 
-/* =========================================
-   MOBILE RESPONSIVENESS
-   ========================================= */
-@media (max-width: 768px) {
-    .f-info {
-        flex-direction: column; /* Stack vertically */
-        gap: 15px; /* Space between rows */
-        padding: 20px;
-        text-align: center;
+.footer-column h5 {
+    margin-bottom: 12px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #121212;
+}
+
+.footer-column a {
+    display: block;
+    color: #5e5e5e;
+    text-decoration: none;
+    margin-bottom: 10px;
+    font-size: 0.92rem;
+    transition: color 0.2s ease;
+}
+
+.footer-column a:hover {
+    color: #111;
+}
+
+.footer-bottom {
+    border-top: 1px solid #e2e2e2;
+    padding-top: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.footer-legal,
+.footer-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: #686868;
+    font-size: 0.88rem;
+}
+
+@media (max-width: 992px) {
+    .footer-top {
+        grid-template-columns: 1fr;
     }
 
-    /* Reset the desktop reordering for mobile flow */
-    .f-info-socials, 
-    .f-info div:nth-child(2), 
-    .f-info-links {
-        order: unset; 
-        margin: 0;
-        width: 100%; /* Full width for centering */
-        justify-content: center;
-    }
-    
-    .f-info-socials {
-        gap: 30px; /* Bigger touch targets for icons */
-        margin-bottom: 10px;
-    }
-    
-    .f-info-links {
-        flex-direction: column; /* Stack links vertically on mobile */
-        gap: 8px;
+    .footer-links-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .f-info-links a::before {
-        content: ""; /* Remove dots on mobile vertical stack */
-        margin: 0;
+    .footer-brand-block {
+        max-width: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .footer-shell {
+        width: min(1280px, calc(100% - 24px));
+        padding-top: 26px;
+    }
+
+    .footer-links-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

@@ -1,0 +1,259 @@
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/admin.css?v=20260308-2">
+
+<div class="admin-shell">
+    <section class="admin-hero">
+        <div>
+            <p class="admin-kicker">Admin panel</p>
+            <h1>Moderation and operations</h1>
+            <p>Review reports, verify hosts, remove unsafe content, and manage booking offers.</p>
+        </div>
+        <div class="admin-quick-links">
+            <a href="#reports">Reports</a>
+            <a href="#refunds">Refunds</a>
+            <a href="#coupons">Coupons</a>
+            <a href="#users">Hosts</a>
+            <a href="#listings">Listings</a>
+            <a href="#audit">Audit log</a>
+        </div>
+    </section>
+
+    <section class="admin-stats">
+        <article><span>Open reports</span><strong><%= stats.openReports %></strong></article>
+        <article><span>Total users</span><strong><%= stats.totalUsers %></strong></article>
+        <article><span>Visible listings</span><strong><%= stats.totalListings %></strong></article>
+        <article><span>Active coupons</span><strong><%= stats.activeCoupons %></strong></article>
+    </section>
+
+    <section class="admin-section" id="reports">
+        <div class="admin-section-head">
+            <h2>Reports</h2>
+            <span><%= reports.length %> total</span>
+        </div>
+        <p class="admin-section-copy">Use reports to moderate unsafe listings, spam reviews, and inappropriate guest content quickly.</p>
+        <div class="admin-table-shell">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Reporter</th>
+                        <th>Target</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% reports.forEach((report) => { %>
+                        <tr>
+                            <td><%= report.reporter?.username || "User" %></td>
+                            <td>
+                                <% if (report.listing) { %>
+                                    <a href="/listings/<%= report.listing._id %>"><%= report.listing.title %></a>
+                                <% } %>
+                                <% if (report.review) { %>
+                                    <div class="admin-note">Review by <%= report.review.author?.username || "User" %></div>
+                                <% } %>
+                            </td>
+                            <td>
+                                <strong><%= report.reason %></strong>
+                                <% if (report.details) { %>
+                                    <div class="admin-note"><%= report.details %></div>
+                                <% } %>
+                            </td>
+                            <td><span class="admin-status <%= report.status %>"><%= report.status %></span></td>
+                            <td class="admin-actions-cell">
+                                <form action="/admin/reports/<%= report._id %>/status" method="POST">
+                                    <input type="hidden" name="status" value="resolved">
+                                    <button type="submit" class="admin-mini-btn">Resolve</button>
+                                </form>
+                                <form action="/admin/reports/<%= report._id %>/status" method="POST">
+                                    <input type="hidden" name="status" value="dismissed">
+                                    <button type="submit" class="admin-mini-btn secondary">Dismiss</button>
+                                </form>
+                                <% if (report.review) { %>
+                                    <form action="/admin/reviews/<%= report.review._id %>/delete" method="POST">
+                                        <button type="submit" class="admin-mini-btn danger">Remove review</button>
+                                    </form>
+                                <% } else if (report.listing) { %>
+                                    <form action="/admin/listings/<%= report.listing._id %>/delete" method="POST">
+                                        <button type="submit" class="admin-mini-btn danger">Remove listing</button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-section" id="refunds">
+        <div class="admin-section-head">
+            <h2>Refund workflow</h2>
+            <span><%= refunds.length %> active</span>
+        </div>
+        <p class="admin-section-copy">Move refunds from pending to processing, completed, or rejected and keep an internal note for the guest history.</p>
+        <div class="admin-table-shell">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Listing</th>
+                        <th>Guest</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% refunds.forEach((refund) => { %>
+                        <tr>
+                            <td><%= refund.listingTitle %></td>
+                            <td><%= refund.guestName %></td>
+                            <td>&#8377; <%= Number(refund.totalPrice || 0).toLocaleString("en-IN") %></td>
+                            <td><span class="admin-status <%= refund.refundStatus %>"><%= refund.refundStatus %></span></td>
+                            <td>
+                                <form action="/admin/refunds/<%= refund.listingId %>/<%= refund.bookingId %>" method="POST" class="refund-form">
+                                    <select name="refundStatus" class="form-select form-select-sm">
+                                        <option value="processing" <%= refund.refundStatus === "processing" ? "selected" : "" %>>Processing</option>
+                                        <option value="completed" <%= refund.refundStatus === "completed" ? "selected" : "" %>>Completed</option>
+                                        <option value="rejected" <%= refund.refundStatus === "rejected" ? "selected" : "" %>>Rejected</option>
+                                    </select>
+                                    <input type="text" name="refundAdminNote" class="form-control form-control-sm" value="<%= refund.refundAdminNote %>" placeholder="Internal note">
+                                    <button type="submit" class="admin-mini-btn">Update</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-section" id="coupons">
+        <div class="admin-section-head">
+            <h2>Coupons and offers</h2>
+            <span><%= coupons.length %> created</span>
+        </div>
+        <p class="admin-section-copy">Create campaign codes for first-booking discounts, weekend offers, or seasonal promotions.</p>
+        <div class="admin-coupon-grid">
+            <form action="/admin/coupons" method="POST" class="coupon-form">
+                <input type="text" name="coupon[code]" class="form-control" placeholder="WELCOME10" required>
+                <input type="text" name="coupon[description]" class="form-control" placeholder="First booking offer">
+                <select name="coupon[discountType]" class="form-select">
+                    <option value="percent">Percent</option>
+                    <option value="fixed">Fixed amount</option>
+                </select>
+                <input type="number" name="coupon[discountValue]" class="form-control" min="0" step="1" placeholder="10" required>
+                <input type="number" name="coupon[minBookingAmount]" class="form-control" min="0" step="100" placeholder="Minimum booking amount">
+                <input type="number" name="coupon[maxDiscountAmount]" class="form-control" min="0" step="100" placeholder="Max discount">
+                <input type="date" name="coupon[expiresAt]" class="form-control">
+                <button type="submit" class="admin-primary-btn">Create coupon</button>
+            </form>
+
+            <div class="coupon-list">
+                <% coupons.forEach((coupon) => { %>
+                    <article class="coupon-card">
+                        <h3><%= coupon.code %></h3>
+                        <p><%= coupon.description || "No description" %></p>
+                        <div class="admin-note"><%= coupon.discountType %> - <%= coupon.discountValue %></div>
+                        <div class="admin-note">Min: &#8377; <%= Number(coupon.minBookingAmount || 0).toLocaleString("en-IN") %></div>
+                        <div class="admin-note">Status: <%= coupon.active ? "Active" : "Inactive" %></div>
+                    </article>
+                <% }); %>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-section" id="users">
+        <div class="admin-section-head">
+            <h2>Hosts and users</h2>
+            <span><%= users.length %> accounts</span>
+        </div>
+        <p class="admin-section-copy">Verify real hosts and control which accounts are treated as trusted operators on the platform.</p>
+        <div class="admin-table-shell">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Host status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach((user) => { %>
+                        <tr>
+                            <td><%= user.username %></td>
+                            <td><%= user.email %></td>
+                            <td><%= user.isAdmin ? "Admin" : "User" %></td>
+                            <td><%= user.hostProfile?.isVerified ? "Verified" : "Pending" %> | <%= user.isSuspended ? "Suspended" : "Active" %></td>
+                            <td class="admin-actions-cell">
+                                <form action="/admin/users/<%= user._id %>/toggle-verify" method="POST">
+                                    <button type="submit" class="admin-mini-btn"><%= user.hostProfile?.isVerified ? "Unverify" : "Verify host" %></button>
+                                </form>
+                                <form action="/admin/users/<%= user._id %>/toggle-suspension" method="POST">
+                                    <button type="submit" class="admin-mini-btn danger"><%= user.isSuspended ? "Restore" : "Suspend" %></button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-section" id="listings">
+        <div class="admin-section-head">
+            <h2>Recent listings</h2>
+            <span><%= listings.length %> loaded</span>
+        </div>
+        <p class="admin-section-copy">Review newly created stays and remove listings that violate platform quality or trust rules.</p>
+        <div class="admin-listing-grid">
+            <% listings.forEach((listing) => { %>
+                <article class="admin-listing-card">
+                    <h3><a href="/listings/<%= listing._id %>"><%= listing.title %></a></h3>
+                    <p><%= listing.location %>, <%= listing.country %></p>
+                    <div class="admin-note">Host: <%= listing.owner?.username || "Unknown" %></div>
+                    <div class="admin-note">&#8377; <%= Number(listing.price || 0).toLocaleString("en-IN") %> per night</div>
+                    <div class="admin-note">Status: <%= listing.isActive ? "Visible" : "Hidden" %></div>
+                    <form action="/admin/listings/<%= listing._id %>/visibility" method="POST">
+                        <button type="submit" class="admin-mini-btn"><%= listing.isActive ? "Hide listing" : "Show listing" %></button>
+                    </form>
+                    <form action="/admin/listings/<%= listing._id %>/delete" method="POST">
+                        <button type="submit" class="admin-mini-btn danger">Remove listing</button>
+                    </form>
+                </article>
+            <% }); %>
+        </div>
+    </section>
+
+    <section class="admin-section" id="audit">
+        <div class="admin-section-head">
+            <h2>Audit log</h2>
+            <span><%= auditLogs.length %> recent actions</span>
+        </div>
+        <div class="admin-table-shell">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Actor</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% auditLogs.forEach((log) => { %>
+                        <tr>
+                            <td><%= log.actor?.username || "System" %></td>
+                            <td><%= log.action %></td>
+                            <td><%= log.entityType %> - <%= log.entityId %></td>
+                            <td><%= log.details || "-" %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

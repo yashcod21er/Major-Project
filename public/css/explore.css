@@ -1,0 +1,223 @@
+.explore-shell {
+    padding: 28px 0 48px;
+}
+
+.explore-hero {
+    border: 1px solid var(--color-border);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, rgba(255, 56, 92, 0.14), transparent 34%),
+        linear-gradient(180deg, #ffffff, #fff8fa);
+    box-shadow: var(--shadow-sm);
+    padding: 24px 28px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.explore-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--color-brand);
+}
+
+.explore-layout {
+    display: grid;
+    grid-template-columns: 390px minmax(0, 1fr);
+    gap: 18px;
+    min-height: 70vh;
+}
+
+.explore-filter-form {
+    display: grid;
+    grid-template-columns: 320px 1fr auto;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.explore-filter-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.explore-filter-dates label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #5f5f5f;
+}
+
+.explore-amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-content: center;
+}
+
+.explore-amenity-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #303030;
+}
+
+.explore-amenity-pill input {
+    accent-color: var(--color-brand);
+}
+
+.explore-filter-btn {
+    border: none;
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    min-height: 46px;
+    padding: 0 18px;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.explore-summary-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.explore-summary-strip span,
+.explore-sidebar-head {
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 56, 92, 0.14);
+}
+
+.explore-summary-strip span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 0.83rem;
+    font-weight: 700;
+}
+
+.explore-sidebar-shell {
+    display: grid;
+    gap: 12px;
+    min-height: 70vh;
+}
+
+.explore-sidebar-head {
+    padding: 16px 18px;
+}
+
+.explore-sidebar-head h2 {
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+}
+
+.explore-sidebar-head p {
+    margin: 0;
+}
+
+.explore-sidebar {
+    display: grid;
+    gap: 14px;
+    max-height: calc(70vh - 88px);
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.explore-card,
+.explore-map {
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.explore-card {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 14px;
+    padding: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.explore-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(255, 56, 92, 0.24);
+}
+
+.explore-card img {
+    width: 120px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 18px;
+}
+
+.explore-card p {
+    margin-bottom: 8px;
+}
+
+.explore-card span {
+    font-weight: 700;
+}
+
+.explore-map {
+    min-height: 70vh;
+    overflow: hidden;
+}
+
+@media (max-width: 992px) {
+    .explore-filter-form,
+    .explore-hero,
+    .explore-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .explore-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .explore-sidebar,
+    .explore-map,
+    .explore-sidebar-shell {
+        max-height: none;
+        min-height: 420px;
+    }
+
+    .explore-filter-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .explore-card {
+        grid-template-columns: 1fr;
+    }
+
+    .explore-card img {
+        width: 100%;
+        height: 180px;
+    }
+}

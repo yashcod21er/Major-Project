@@ -1,0 +1,45 @@
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/chat.css?v=20260308-2">
+
+<div class="chat-shell">
+    <section class="chat-hero compact">
+        <div>
+            <p class="chat-kicker">Conversation</p>
+            <h1><%= thread.listing?.title || "Listing chat" %></h1>
+            <p>Host: <%= thread.host?.username || "Host" %> | Guest: <%= thread.guest?.username || "Guest" %></p>
+            <div class="thread-context-row">
+                <span><i class="fa-solid fa-location-dot"></i> <%= thread.listing?.location || "Stay" %>, <%= thread.listing?.country || "" %></span>
+                <span><i class="fa-regular fa-message"></i> <%= thread.messages.length %> messages</span>
+            </div>
+        </div>
+        <a href="/listings/<%= thread.listing?._id %>" class="chat-back-link">Back to listing</a>
+    </section>
+
+    <div class="message-stream" id="message-stream" data-current-user-id="<%= currentUser ? currentUser._id : '' %>" data-stream-url="/chat/threads/<%= thread._id %>/stream" data-read-url="/chat/threads/<%= thread._id %>/read">
+        <% if (!thread.messages.length) { %>
+            <div class="chat-empty-card compact">
+                <i class="fa-regular fa-comments"></i>
+                <h2>Start the conversation</h2>
+                <p>Use this space for check-in details, questions, and booking coordination.</p>
+            </div>
+        <% } else { %>
+            <% thread.messages.forEach((message) => { %>
+                <article class="message-card <%= currentUser && message.sender && String(currentUser._id) === String(message.sender._id) ? 'mine' : '' %>">
+                    <strong><%= message.sender?.username || "User" %></strong>
+                    <p><%= message.body %></p>
+                    <span><%= new Date(message.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) %></span>
+                </article>
+            <% }); %>
+        <% } %>
+    </div>
+
+    <form action="/chat/threads/<%= thread._id %>/messages" method="POST" class="message-form" id="message-form">
+        <textarea name="message[body]" class="form-control" rows="4" maxlength="1000" placeholder="Write a message..." required></textarea>
+        <div class="message-form-footer">
+            <span>Messages stay inside this booking thread.</span>
+            <button type="submit" class="chat-send-btn">Send message</button>
+        </div>
+    </form>
+</div>
+
+<script src="/js/chatThread.js?v=20260308-1"></script>

@@ -1,16 +1,73 @@
-<link rel="stylesheet" href="/css/footer.css">
-<footer>
-    <div class="f-info">
-        <div class="f-info-socials">
-            <i class="fa-brands fa-facebook"></i>
-            <i class="fa-brands fa-x-twitter"></i>
-            <i class="fa-brands fa-instagram"></i>
-        </div>
-        <div> &copy; UrabanStay Private Limited</div>
-        <div class="f-info-links">
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
-            <a href="/company-detail">Company details</a>
-        </div>
+<link rel="stylesheet" href="/css/footer.css?v=20260308-1">
+<footer class="site-footer">
+    <div class="footer-shell">
+        <section class="footer-top">
+            <div class="footer-brand-block">
+                <div class="footer-brand">
+                    <i class="fa-regular fa-compass"></i>
+                    <span>UrbanStay</span>
+                </div>
+                <p class="footer-tagline">Thoughtful stays, verified reviews, and a simpler way to book your next trip.</p>
+                <div class="footer-socials">
+                    <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a href="https://x.com/" target="_blank" rel="noreferrer" aria-label="X">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </a>
+                    <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" aria-label="Facebook">
+                        <i class="fa-brands fa-facebook"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-links-grid">
+                <div class="footer-column">
+                    <h5>Support</h5>
+                    <a href="mailto:support@urbanstay.dev">Help Centre</a>
+                    <a href="mailto:bookings@urbanstay.dev">Booking Support</a>
+                    <a href="tel:+919999999999">Contact Us</a>
+                </div>
+
+                <div class="footer-column">
+                    <h5>Hosting</h5>
+                    <a href="/listings/new">Airbnb your home</a>
+                    <a href="/profile">Owner dashboard</a>
+                    <a href="/wishlist">Saved stays</a>
+                </div>
+
+                <div class="footer-column">
+                    <h5>Discover</h5>
+                    <a href="/listings?q=beach">Beach stays</a>
+                    <a href="/listings?q=mountain">Mountain cabins</a>
+                    <a href="/listings?q=luxury">Luxury homes</a>
+                    <a href="/listings/explore">Explore map</a>
+                </div>
+
+                <div class="footer-column">
+                    <h5>Account</h5>
+                    <% if (!currentUser) { %>
+                        <a href="/user/signup">Create account</a>
+                        <a href="/user/login">Log in</a>
+                    <% } else { %>
+                        <a href="/profile">My profile</a>
+                        <a href="/user/logout">Log out</a>
+                    <% } %>
+                    <a href="/listings">Explore stays</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="footer-bottom">
+            <div class="footer-legal">
+                <span>&copy; 2026 UrbanStay Private Limited</span>
+                <span>Built for modern travel bookings</span>
+            </div>
+            <div class="footer-meta">
+                <span>Secure payments</span>
+                <span>Verified reviews</span>
+                <span>Responsive support</span>
+            </div>
+        </section>
     </div>
 </footer>

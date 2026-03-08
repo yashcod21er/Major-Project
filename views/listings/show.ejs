@@ -1,131 +1,487 @@
-<%- layout("/layouts/boilerplate") %>
-<link rel="stylesheet" href="/css/show.css?v=20260301-4">
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/show.css?v=20260308-1">
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
 />
+
+<%
+    const listingLikes = Array.isArray(listing.likes) ? listing.likes : [];
+    const isLiked = currentUser && listingLikes.some((likedUserId) => String(likedUserId) === String(currentUser._id));
+    const bookingRanges = blockedRanges.map((range) => ({
+        start: new Date(range.startDate).toISOString().split("T")[0],
+        end: new Date(range.endDate).toISOString().split("T")[0],
+    }));
+    const isOwnerView = currentUser && listing.owner && currentUser._id.equals(listing.owner._id);
+    const displayNearbyPlaces = Array.isArray(nearbyPlacesLive) && nearbyPlacesLive.length ? nearbyPlacesLive : (listing.nearbyPlaces || []);
+%>
+
 <div class="row mt-3 justify-content-center">
-    <div class="col-12 col-md-11 col-lg-8">
-        <h3><%= listing.title %></h3>
-
-        <div class="card listing-card">
-            <img src="<%= listing.image.url && listing.image.url.trim() !== '' ? listing.image.url : 'https://images.unsplash.com/photo-1505691938895-1758d7feb511' %>" class="card-img-top show-img"
-                alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night">
-
-            <div class="card-body">
-                <p class="card-text">
-                    <b><i>Hosted by <%= listing.owner ? listing.owner.username : "Host" %></i></b>
-                    <br><br>
-                    <%= listing.description %> <br>
-
-                    <span class="fw-bold">
-                        &#8377; <%= listing.price.toLocaleString("en-IN") %>
-                    </span> / night <br>
-
-                    <%= listing.location %>, <%= listing.country %>
-                </p>
+    <div class="col-12 col-md-11 col-lg-10">
+        <section class="show-hero">
+            <div>
+                <p class="show-kicker">Hosted stay</p>
+                <h1><%= listing.title %></h1>
+                <div class="show-meta-line">
+                    <span><i class="fa-solid fa-star"></i> <%= listing.ratingAverage ? listing.ratingAverage.toFixed(1) : "New" %></span>
+                    <span><%= listing.reviewCount || 0 %> reviews</span>
+                    <span><%= listing.location %>, <%= listing.country %></span>
+                </div>
             </div>
-        </div>
 
-        <% if (currentUser && listing.owner && currentUser._id.equals(listing.owner._id)) { %>
-            <div class="btns mb-5">
-                <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark edit-btn">Edit</a>
-                <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
-                    <button class="btn btn-dark delete-btn">Delete</button>
-                </form>
-            </div>
-        <% } %>
-
-        <div class="map-section">
-            <h4 class="map-heading">Location Map</h4>
-            <div
-                id="listing-map"
-                data-title="<%= listing.title %>"
-                data-location="<%= listing.location %>"
-                data-country="<%= listing.country %>"></div>
-        </div>
-
-        <div class="unique-review-wrapper">
-            <hr class="review-divider">
-
-            <div class="review-form-container">
-                <h4 class="review-heading">Leave a Review</h4>
-                <% if (!currentUser) { %>
-                    <p class="review-text">
-                        Please <a href="/login">log in</a> to write a review.
-                    </p>
-                <% } else if (listing.owner && currentUser._id.equals(listing.owner._id)) { %>
-                    <p class="review-text">You cannot review your own listing.</p>
-                <% } else { %>
-                    <form action="/listings/<%= listing._id %>/reviews" method="POST" novalidate class="needs-validation">
-                        <div class="mb-3">
-                            <label class="form-label review-label">Rating</label>
-                            <fieldset class="starability-grow">
-                                <input type="radio" id="rate5" name="review[rating]" value="5" required />
-                                <label for="rate5" title="Amazing">5 stars</label>
-                                <input type="radio" id="rate4" name="review[rating]" value="4" />
-                                <label for="rate4" title="Very good">4 stars</label>
-                                <input type="radio" id="rate3" name="review[rating]" value="3" />
-                                <label for="rate3" title="Good">3 stars</label>
-                                <input type="radio" id="rate2" name="review[rating]" value="2" />
-                                <label for="rate2" title="Fair">2 stars</label>
-                                <input type="radio" id="rate1" name="review[rating]" value="1" />
-                                <label for="rate1" title="Poor">1 star</label>
-                            </fieldset>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="comment" class="form-label review-label">Comment</label>
-                            <textarea
-                                class="form-control review-textarea"
-                                id="comment"
-                                name="review[comment]"
-                                rows="3"
-                                placeholder="Share your experience..."
-                                required></textarea>
-                            <div class="invalid-feedback">Please write a review.</div>
-                        </div>
-
-                        <button class="btn review-btn">Submit Review</button>
+            <div class="show-actions">
+                <% if (currentUser) { %>
+                    <form method="POST" action="/listings/<%= listing._id %>/like" class="d-inline">
+                        <input type="hidden" name="redirect" value="<%= returnTo || ('/listings/' + listing._id) %>">
+                        <button type="submit" class="btn like-btn <%= isLiked ? 'liked' : '' %>">
+                            <i class="<%= isLiked ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+                            <span><%= isLiked ? "Saved" : "Save" %> (<%= listingLikes.length %>)</span>
+                        </button>
                     </form>
+                    <% if (!isOwnerView) { %>
+                        <form method="POST" action="/chat/listings/<%= listing._id %>" class="d-inline">
+                            <button type="submit" class="btn like-btn secondary-action-btn">
+                                <i class="fa-regular fa-message"></i>
+                                <span>Chat host</span>
+                            </button>
+                        </form>
+                    <% } %>
+                <% } else { %>
+                    <a href="/user/login" class="btn like-btn">
+                        <i class="fa-regular fa-heart"></i>
+                        <span>Save (<%= listingLikes.length %>)</span>
+                    </a>
+                <% } %>
+            </div>
+        </section>
+
+        <section class="gallery-shell" data-gallery-root>
+            <% const initialImage = galleryImages[0] || listing.image; %>
+            <div class="gallery-stage">
+                <% if (galleryImages.length > 1) { %>
+                    <button type="button" class="gallery-nav prev" data-gallery-prev aria-label="Previous photo">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                <% } %>
+
+                <img
+                    src="<%= initialImage.url %>"
+                    class="card-img-top show-img"
+                    id="gallery-active-image"
+                    data-gallery-active
+                    alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night">
+
+                <% if (galleryImages.length > 1) { %>
+                    <button type="button" class="gallery-nav next" data-gallery-next aria-label="Next photo">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                 <% } %>
             </div>
 
-            <hr class="review-divider">
+            <% if (galleryImages.length > 1) { %>
+                <div class="gallery-thumbs">
+                    <% galleryImages.forEach((image, index) => { %>
+                        <button
+                            type="button"
+                            class="gallery-thumb <%= index === 0 ? 'active' : '' %>"
+                            data-gallery-thumb
+                            data-index="<%= index %>"
+                            data-image-url="<%= image.url %>"
+                            data-image-alt="<%= `${listing.title} photo ${index + 1}` %>"
+                            aria-label="Open photo <%= index + 1 %>">
+                            <img src="<%= image.url %>" alt="<%= `${listing.title} thumbnail ${index + 1}` %>">
+                        </button>
+                    <% }); %>
+                </div>
+            <% } %>
+        </section>
 
-            <h4 class="review-heading">All Reviews</h4>
-            <% if (listing.reviews.length === 0) { %>
-                <p class="review-text">No reviews yet. Be the first to leave one.</p>
-            <% } else { %>
-                <div class="reviews-grid">
-                    <% for (let review of listing.reviews) { %>
-                        <div class="card review-card">
-                            <div class="card-body">
-                                <div class="review-header">
-                                    <div class="review-avatar">
-                                        <%= review.author && review.author.username ? review.author.username.charAt(0).toUpperCase() : "U" %>
-                                    </div>
-                                    <div>
-                                        <h5 class="review-author"><%= review.author && review.author.username ? review.author.username : "User" %></h5>
-                                        <p class="review-date">Verified Stay</p>
-                                    </div>
-                                    <span class="review-rating-badge">&#9733; <%= review.rating %></span>
+        <section class="show-content-grid">
+            <div class="show-main-column">
+                <div class="card listing-card show-info-card">
+                    <div class="card-body">
+                        <div class="host-headline-row">
+                            <div>
+                                <p class="host-line">Hosted by <strong><%= listing.owner ? listing.owner.username : "Host" %></strong></p>
+                                <div class="host-facts-grid">
+                                    <span class="fact-pill"><i class="fa-solid fa-award"></i> <%= hostFacts.badge %></span>
+                                    <span class="fact-pill <%= hostFacts.isVerified ? 'verified' : '' %>"><i class="fa-solid fa-shield-heart"></i> <%= hostFacts.isVerified ? "Verified host" : "Verification pending" %></span>
+                                    <span class="fact-pill"><i class="fa-solid fa-reply"></i> <%= hostFacts.responseRate %>% response rate</span>
+                                    <span class="fact-pill"><i class="fa-regular fa-clock"></i> Replies <%= hostFacts.responseTime %></span>
+                                    <% if (hostFacts.hostSince) { %>
+                                        <span class="fact-pill"><i class="fa-regular fa-calendar"></i> Hosting since <%= hostFacts.hostSince %></span>
+                                    <% } %>
                                 </div>
-                                <p class="review-text"><%= review.comment %></p>
-
-                                <% if (currentUser && review.author && currentUser._id.equals(review.author._id)) { %>
-                                    <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST" class="d-inline">
-                                        <button class="btn btn-sm review-delete-btn">Delete</button>
-                                    </form>
-                                <% } %>
                             </div>
+                            <div class="price-chip">
+                                <span>&#8377; <%= listing.price.toLocaleString("en-IN") %></span>
+                                <small>per night</small>
+                            </div>
+                        </div>
+
+                        <p class="description-copy"><%= listing.description %></p>
+                    </div>
+                </div>
+
+                <% if (isOwnerView) { %>
+                    <div class="btns owner-actions mb-4">
+                        <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark edit-btn">Edit listing</a>
+                        <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
+                            <button class="btn btn-dark delete-btn">Delete listing</button>
+                        </form>
+                    </div>
+                <% } %>
+
+                <section class="info-section-card">
+                    <div class="section-card-header">
+                        <h4>Stay policies</h4>
+                        <span class="policy-pill"><%= listing.cancellationPolicy || "flexible" %> cancellation</span>
+                    </div>
+                    <p><%= policySummary %></p>
+                </section>
+
+                <section class="info-section-card">
+                    <div class="section-card-header">
+                        <h4>Amenities</h4>
+                        <span><%= (listing.amenities || []).length %> selected</span>
+                    </div>
+                    <% if (!listing.amenities || !listing.amenities.length) { %>
+                        <p class="booking-empty-state">No amenities have been added for this stay yet.</p>
+                    <% } else { %>
+                        <div class="amenity-chip-grid">
+                            <% listing.amenities.forEach((amenity) => { %>
+                                <span class="amenity-chip"><i class="fa-solid fa-check"></i> <%= amenity %></span>
+                            <% }); %>
+                        </div>
+                    <% } %>
+                </section>
+
+                <section class="info-section-card">
+                    <div class="section-card-header">
+                        <h4>Nearby places</h4>
+                        <span><%= displayNearbyPlaces.length %> suggestions</span>
+                    </div>
+                    <div class="nearby-place-grid">
+                        <% displayNearbyPlaces.forEach((place) => { %>
+                            <div class="nearby-place-item">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span><%= place %></span>
+                            </div>
+                        <% }); %>
+                    </div>
+                </section>
+
+                <% if (isOwnerView) { %>
+                    <section class="info-section-card" id="host-tools">
+                        <div class="section-card-header">
+                            <h4>Host tools</h4>
+                            <span>Availability and pricing</span>
+                        </div>
+                        <div class="calendar-legend">
+                            <span class="legend-chip available">Available</span>
+                            <span class="legend-chip booking">Booked</span>
+                            <span class="legend-chip host">Host blocked</span>
+                        </div>
+                        <div class="host-calendar-grid">
+                            <% calendarMonths.forEach((month) => { %>
+                                <section class="calendar-card">
+                                    <h5><%= month.label %></h5>
+                                    <div class="calendar-weekdays">
+                                        <span>Sun</span>
+                                        <span>Mon</span>
+                                        <span>Tue</span>
+                                        <span>Wed</span>
+                                        <span>Thu</span>
+                                        <span>Fri</span>
+                                        <span>Sat</span>
+                                    </div>
+                                    <div class="calendar-days">
+                                        <% month.cells.forEach((cell) => { %>
+                                            <% if (cell.isPadding) { %>
+                                                <span class="calendar-day padding"></span>
+                                            <% } else { %>
+                                                <span class="calendar-day <%= cell.status %>" title="<%= cell.label %>"><%= cell.day %></span>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
+                                </section>
+                            <% }); %>
+                        </div>
+                        <div class="host-tools-grid">
+                            <form action="/listings/<%= listing._id %>/blocked-ranges" method="POST" class="tool-form">
+                                <h5>Block dates</h5>
+                                <label for="blockStartDate">Start date</label>
+                                <input id="blockStartDate" type="date" name="block[startDate]" class="form-control" min="<%= today %>" required>
+                                <label for="blockEndDate">End date</label>
+                                <input id="blockEndDate" type="date" name="block[endDate]" class="form-control" min="<%= today %>" required>
+                                <label for="blockReason">Reason</label>
+                                <input id="blockReason" type="text" name="block[reason]" class="form-control" maxlength="80" placeholder="Maintenance or personal stay">
+                                <button class="tool-submit-btn" type="submit">Save blocked range</button>
+                            </form>
+
+                            <form action="/listings/<%= listing._id %>/seasonal-pricing" method="POST" class="tool-form">
+                                <h5>Seasonal pricing</h5>
+                                <label for="pricingLabel">Label</label>
+                                <input id="pricingLabel" type="text" name="pricing[label]" class="form-control" maxlength="60" placeholder="Holiday pricing">
+                                <label for="pricingStartDate">Start date</label>
+                                <input id="pricingStartDate" type="date" name="pricing[startDate]" class="form-control" min="<%= today %>" required>
+                                <label for="pricingEndDate">End date</label>
+                                <input id="pricingEndDate" type="date" name="pricing[endDate]" class="form-control" min="<%= today %>" required>
+                                <label for="nightlyPrice">Nightly price</label>
+                                <input id="nightlyPrice" type="number" name="pricing[nightlyPrice]" class="form-control" min="0" step="100" required>
+                                <button class="tool-submit-btn" type="submit">Save seasonal pricing</button>
+                            </form>
+                        </div>
+
+                        <% if ((listing.seasonalPricing || []).length) { %>
+                            <div class="host-tool-list">
+                                <h5>Seasonal pricing rules</h5>
+                                <div class="blocked-date-list">
+                                    <% listing.seasonalPricing.forEach((season) => { %>
+                                        <div class="blocked-date-item source-host">
+                                            <strong><%= season.label || "Seasonal pricing" %></strong>
+                                            <span><%= new Date(season.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %> to <%= new Date(season.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
+                                            <span>&#8377; <%= Number(season.nightlyPrice || 0).toLocaleString("en-IN") %>/night</span>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        <% } %>
+                    </section>
+                <% } %>
+
+                <div class="map-section">
+                    <h4 class="map-heading">Location map</h4>
+                    <div
+                        id="listing-map"
+                        data-title="<%= listing.title %>"
+                        data-location="<%= listing.location %>"
+                        data-country="<%= listing.country %>"
+                        data-lat="<%= listing.geo && typeof listing.geo.lat === 'number' ? listing.geo.lat : '' %>"
+                        data-lng="<%= listing.geo && typeof listing.geo.lng === 'number' ? listing.geo.lng : '' %>"
+                        data-label="<%= listing.geo && listing.geo.placeLabel ? listing.geo.placeLabel : '' %>"></div>
+                </div>
+
+                <div class="unique-review-wrapper">
+                    <div class="review-heading-row">
+                        <h4 class="review-heading">Guest reviews</h4>
+                        <div class="review-summary-pill">
+                            <i class="fa-solid fa-star"></i>
+                            <span><%= listing.ratingAverage ? listing.ratingAverage.toFixed(1) : "New" %></span>
+                            <small><%= listing.reviewCount || 0 %> total</small>
+                        </div>
+                    </div>
+
+                    <hr class="review-divider">
+
+                    <div class="review-form-container">
+                        <h4 class="review-heading">Leave a review</h4>
+                        <% if (!currentUser) { %>
+                            <p class="review-text">Please <a href="/login">log in</a> to write a review.</p>
+                        <% } else if (isOwnerView) { %>
+                            <p class="review-text">You cannot review your own listing.</p>
+                        <% } else { %>
+                            <form action="/listings/<%= listing._id %>/reviews" method="POST" enctype="multipart/form-data" novalidate class="needs-validation">
+                                <div class="mb-3">
+                                    <label class="form-label review-label">Rating</label>
+                                    <fieldset class="starability-grow">
+                                        <input type="radio" id="rate5" name="review[rating]" value="5" required />
+                                        <label for="rate5" title="Amazing">5 stars</label>
+                                        <input type="radio" id="rate4" name="review[rating]" value="4" />
+                                        <label for="rate4" title="Very good">4 stars</label>
+                                        <input type="radio" id="rate3" name="review[rating]" value="3" />
+                                        <label for="rate3" title="Good">3 stars</label>
+                                        <input type="radio" id="rate2" name="review[rating]" value="2" />
+                                        <label for="rate2" title="Fair">2 stars</label>
+                                        <input type="radio" id="rate1" name="review[rating]" value="1" />
+                                        <label for="rate1" title="Poor">1 star</label>
+                                    </fieldset>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label review-label">Comment</label>
+                                    <textarea class="form-control review-textarea" id="comment" name="review[comment]" rows="3" placeholder="Share your experience..." required></textarea>
+                                    <div class="invalid-feedback">Please write a review.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="reviewImages" class="form-label review-label">Add photos</label>
+                                    <input id="reviewImages" type="file" name="reviewImages" class="form-control review-photo-input" accept="image/*" multiple>
+                                    <div class="form-text">You can upload up to 3 review images.</div>
+                                </div>
+
+                                <button class="btn review-btn">Submit review</button>
+                            </form>
+                        <% } %>
+                    </div>
+
+                    <hr class="review-divider">
+
+                    <% if (listing.reviews.length === 0) { %>
+                        <p class="review-text">No reviews yet. Be the first to leave one.</p>
+                    <% } else { %>
+                        <div class="reviews-grid">
+                            <% for (let review of listing.reviews) { %>
+                                <% const canEditReview = currentUser && review.author && currentUser._id.equals(review.author._id); %>
+                                <div class="card review-card" id="review-<%= review._id %>">
+                                    <div class="card-body">
+                                        <div class="review-header">
+                                            <div class="review-avatar">
+                                                <%= review.author && review.author.username ? review.author.username.charAt(0).toUpperCase() : "U" %>
+                                            </div>
+                                            <div>
+                                                <h5 class="review-author"><%= review.author && review.author.username ? review.author.username : "User" %></h5>
+                                                <p class="review-date">Verified stay</p>
+                                            </div>
+                                            <span class="review-rating-badge">&#9733; <%= review.rating %></span>
+                                        </div>
+
+                                        <% if (editingReviewId === String(review._id) && canEditReview) { %>
+                                            <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=PUT" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                <div class="mb-3">
+                                                    <label class="form-label review-label">Update rating</label>
+                                                    <fieldset class="starability-grow">
+                                                        <% for (let ratingValue = 5; ratingValue >= 1; ratingValue--) { %>
+                                                            <% const inputId = `edit-${review._id}-${ratingValue}`; %>
+                                                            <input type="radio" id="<%= inputId %>" name="review[rating]" value="<%= ratingValue %>" <%= review.rating === ratingValue ? "checked" : "" %> required />
+                                                            <label for="<%= inputId %>" title="<%= ratingValue %> stars"><%= ratingValue %> stars</label>
+                                                        <% } %>
+                                                    </fieldset>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <textarea class="form-control review-textarea" name="review[comment]" rows="3" required><%= review.comment %></textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label review-label">Add more photos</label>
+                                                    <input type="file" name="reviewImages" class="form-control review-photo-input" accept="image/*" multiple>
+                                                </div>
+                                                <div class="review-action-row">
+                                                    <button class="btn btn-sm review-delete-btn" type="submit">Save changes</button>
+                                                    <a href="/listings/<%= listing._id %>#review-<%= review._id %>" class="btn btn-sm review-secondary-btn">Cancel</a>
+                                                </div>
+                                            </form>
+                                        <% } else { %>
+                                            <p class="review-text"><%= review.comment %></p>
+
+                                            <% if (Array.isArray(review.images) && review.images.length) { %>
+                                                <div class="review-photo-grid">
+                                                    <% review.images.forEach((image) => { %>
+                                                        <a href="<%= image.url %>" target="_blank" rel="noreferrer" class="review-photo-tile">
+                                                            <img src="<%= image.url %>" alt="Review photo">
+                                                        </a>
+                                                    <% }); %>
+                                                </div>
+                                            <% } %>
+
+                                            <% if (canEditReview) { %>
+                                                <div class="review-action-row">
+                                                    <a href="/listings/<%= listing._id %>?editReview=<%= review._id %>#review-<%= review._id %>" class="btn btn-sm review-secondary-btn">Edit</a>
+                                                    <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST" class="d-inline">
+                                                        <button class="btn btn-sm review-delete-btn">Delete</button>
+                                                    </form>
+                                                </div>
+                                            <% } else if (currentUser) { %>
+                                                <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>/report" method="POST" class="report-form">
+                                                    <input type="hidden" name="report[reason]" value="Inappropriate review">
+                                                    <input type="hidden" name="report[details]" value="Flagged from listing page">
+                                                    <button class="btn btn-sm review-secondary-btn" type="submit">Report</button>
+                                                </form>
+                                            <% } %>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% } %>
                         </div>
                     <% } %>
                 </div>
-            <% } %>
-        </div>
+            </div>
+
+            <aside class="booking-column">
+                <div
+                    class="booking-card"
+                    id="booking-card"
+                    data-bookings='<%- JSON.stringify(bookingRanges) %>'
+                    data-razorpay-enabled="<%= razorpayEnabled %>"
+                    data-razorpay-key-id="<%= razorpayKeyId || '' %>"
+                    data-order-endpoint="/listings/<%= listing._id %>/bookings/order"
+                    data-verify-endpoint="/listings/<%= listing._id %>/bookings/verify"
+                    data-price-per-night="<%= listing.price %>"
+                    data-listing-title="<%= listing.title %>"
+                    data-user-name="<%= currentUser && currentUser.username ? currentUser.username : '' %>"
+                    data-user-email="<%= currentUser && currentUser.email ? currentUser.email : '' %>">
+                    <div class="booking-price-row">
+                        <div>
+                            <strong>&#8377; <%= listing.price.toLocaleString("en-IN") %></strong>
+                            <span>night</span>
+                        </div>
+                        <div class="booking-rating">
+                            <i class="fa-solid fa-star"></i>
+                            <span><%= listing.ratingAverage ? listing.ratingAverage.toFixed(1) : "New" %></span>
+                        </div>
+                    </div>
+
+                    <h4>Booking calendar</h4>
+                    <p class="booking-note">Your payment is verified before the stay is confirmed. Blocked host dates and confirmed bookings are enforced together.</p>
+                    <p class="booking-policy-note"><strong><%= (listing.cancellationPolicy || "flexible").toUpperCase() %>:</strong> <%= policySummary %></p>
+
+                    <% if (!razorpayEnabled) { %>
+                        <p class="booking-empty-state">Razorpay is not configured yet. Add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to enable payments.</p>
+                    <% } else if (!currentUser) { %>
+                        <p class="booking-empty-state">Log in to reserve this stay.</p>
+                    <% } else if (isOwnerView) { %>
+                        <p class="booking-empty-state">Hosts cannot book their own listings.</p>
+                    <% } else { %>
+                        <form action="/listings/<%= listing._id %>/bookings" method="POST" class="booking-form" id="booking-form">
+                            <div class="booking-date-grid">
+                                <div>
+                                    <label for="startDate" class="form-label">Check in</label>
+                                    <input type="date" id="startDate" name="booking[startDate]" class="form-control" min="<%= today %>" required>
+                                </div>
+                                <div>
+                                    <label for="endDate" class="form-label">Check out</label>
+                                    <input type="date" id="endDate" name="booking[endDate]" class="form-control" min="<%= today %>" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="couponCode" class="form-label">Coupon code</label>
+                                <input type="text" id="couponCode" name="booking[couponCode]" class="form-control" maxlength="30" placeholder="WELCOME10">
+                            </div>
+                            <p class="booking-total" id="booking-total">Select dates to calculate your total.</p>
+                            <p class="booking-validation-message d-none" id="booking-validation-message"></p>
+                            <button class="btn booking-btn" type="submit" id="booking-submit-btn">Pay with Razorpay</button>
+                        </form>
+                    <% } %>
+
+                    <% if (currentUser && !isOwnerView) { %>
+                        <form action="/listings/<%= listing._id %>/report" method="POST" class="listing-report-form">
+                            <input type="hidden" name="report[reason]" value="Listing issue">
+                            <input type="hidden" name="report[details]" value="Flagged from booking panel">
+                            <button type="submit" class="report-link-btn">Report listing</button>
+                        </form>
+                    <% } %>
+
+                    <div class="blocked-dates-shell">
+                        <h5>Blocked ranges</h5>
+                        <% if (!blockedRanges.length) { %>
+                            <p class="booking-empty-state">No blocked dates yet.</p>
+                        <% } else { %>
+                            <div class="blocked-date-list">
+                                <% blockedRanges.forEach((range) => { %>
+                                    <div class="blocked-date-item <%= range.source === 'host' ? 'source-host' : 'source-booking' %>">
+                                        <span><%= new Date(range.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                        <span><%= new Date(range.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
+                                        <small><%= range.label %></small>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </aside>
+        </section>
     </div>
 </div>
 
@@ -133,4 +489,8 @@
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""></script>
-<script src="/js/showMap.js?v=20260228-1"></script>
+<% if (razorpayEnabled) { %>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<% } %>
+<script src="/js/showMap.js?v=20260307-1"></script>
+<script src="/js/showListing.js?v=20260307-2"></script>

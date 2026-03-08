@@ -1,0 +1,53 @@
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/chat.css?v=20260308-2">
+
+<div class="chat-shell">
+    <section class="chat-hero">
+        <div>
+            <p class="chat-kicker">Inbox</p>
+            <h1>Guest and host messages</h1>
+            <p>Use this to coordinate check-in details, questions, and booking updates.</p>
+        </div>
+        <div class="chat-feature-strip">
+            <span><i class="fa-solid fa-link"></i> Linked to listings</span>
+            <span><i class="fa-regular fa-bell"></i> Booking context</span>
+            <span><i class="fa-regular fa-comment-dots"></i> Private threads</span>
+        </div>
+    </section>
+
+    <% if (!threads.length) { %>
+        <div class="chat-empty-card">
+            <i class="fa-regular fa-message"></i>
+            <h2>No conversations yet</h2>
+            <p>Open any listing and use the `Chat host` button to start a private thread.</p>
+        </div>
+    <% } else { %>
+        <div class="thread-list">
+            <% threads.forEach((thread) => { %>
+                <% const preview = thread.messages[thread.messages.length - 1]; %>
+                <% const isHostView = currentUser && thread.host && String(currentUser._id) === String(thread.host._id); %>
+                <% const counterpart = isHostView ? thread.guest : thread.host; %>
+                <a href="/chat/threads/<%= thread._id %>" class="thread-card">
+                    <div class="thread-card-top">
+                        <h2><%= thread.listing?.title || "Listing" %></h2>
+                        <div class="thread-pill-row">
+                            <span class="thread-badge"><%= isHostView ? "Guest chat" : "Host chat" %></span>
+                            <% if (thread.unreadCount > 0) { %>
+                                <span class="thread-unread-badge"><%= thread.unreadCount %> new</span>
+                            <% } %>
+                        </div>
+                    </div>
+                    <p class="thread-meta">Talking with <strong><%= counterpart?.username || "User" %></strong> about <%= thread.listing?.location || "this stay" %></p>
+                    <div class="thread-preview">
+                        <strong><%= preview?.sender?.username || "No messages yet" %></strong>
+                        <span><%= preview?.body || "Open the thread to send the first message." %></span>
+                    </div>
+                    <div class="thread-footer">
+                        <span><i class="fa-regular fa-message"></i> <%= thread.messages.length %> messages</span>
+                        <span><i class="fa-regular fa-clock"></i> <%= new Date(thread.lastMessageAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) %></span>
+                    </div>
+                </a>
+            <% }); %>
+        </div>
+    <% } %>
+</div>

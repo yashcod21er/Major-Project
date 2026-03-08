@@ -1,0 +1,45 @@
+<% layout("/layouts/boilerplate") %>
+<link rel="stylesheet" href="/css/profile.css?v=20260307-1">
+
+<div class="dashboard-shell">
+    <section class="dashboard-hero compact">
+        <div>
+            <p class="dashboard-kicker">Wishlist</p>
+            <h1>Saved stays</h1>
+            <p class="dashboard-subtext">Everything you have liked is collected here for quick comparison.</p>
+        </div>
+        <div class="dashboard-actions">
+            <a href="/profile" class="dashboard-secondary-link">Back to dashboard</a>
+        </div>
+    </section>
+
+    <section class="dashboard-section">
+        <div class="section-heading-row">
+            <h2>Saved listings</h2>
+            <span><%= wishlistListings.length %> total</span>
+        </div>
+
+        <% if (!wishlistListings.length) { %>
+            <p class="empty-copy">Your wishlist is empty.</p>
+        <% } else { %>
+            <div class="dashboard-card-grid">
+                <% wishlistListings.forEach((listing) => { %>
+                    <a href="/listings/<%= listing._id %>" class="dashboard-listing-card">
+                        <img src="<%= listing.coverImage && listing.coverImage.url ? listing.coverImage.url : listing.image.url %>" alt="<%= listing.title %>">
+                        <div class="dashboard-listing-copy">
+                            <h3><%= listing.title %></h3>
+                            <p><%= listing.location %>, <%= listing.country %></p>
+                            <div class="dashboard-card-meta">
+                                <span>&#8377; <%= Number(listing.price || 0).toLocaleString("en-IN") %>/night</span>
+                                <span><i class="fa-solid fa-star"></i> <%= listing.ratingAverage ? Number(listing.ratingAverage).toFixed(1) : "New" %></span>
+                            </div>
+                            <% if (listing.owner) { %>
+                                <span class="wishlist-owner">Hosted by <%= listing.owner.username %></span>
+                            <% } %>
+                        </div>
+                    </a>
+                <% }); %>
+            </div>
+        <% } %>
+    </section>
+</div>

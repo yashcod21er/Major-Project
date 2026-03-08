@@ -1,0 +1,224 @@
+.chat-shell {
+    padding: 28px 0 48px;
+}
+
+.chat-hero,
+.thread-card,
+.message-stream,
+.message-form {
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.chat-hero {
+    padding: 24px 28px;
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-end;
+    background:
+        radial-gradient(circle at top right, rgba(255, 56, 92, 0.14), transparent 34%),
+        linear-gradient(180deg, #ffffff, #fff8fa);
+}
+
+.chat-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--color-brand);
+}
+
+.chat-empty {
+    color: var(--color-text-muted);
+}
+
+.chat-feature-strip,
+.thread-context-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chat-feature-strip span,
+.thread-context-row span,
+.thread-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 56, 92, 0.14);
+    padding: 9px 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #363636;
+}
+
+.chat-empty-card {
+    border: 1px dashed #dfdfdf;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #ffffff, #fafafa);
+    padding: 36px 28px;
+    text-align: center;
+}
+
+.chat-empty-card.compact {
+    padding: 24px 20px;
+}
+
+.chat-empty-card i {
+    font-size: 1.8rem;
+    color: var(--color-brand);
+    margin-bottom: 12px;
+}
+
+.thread-list {
+    display: grid;
+    gap: 14px;
+}
+
+.thread-card {
+    padding: 18px 20px;
+    text-decoration: none;
+    color: inherit;
+    display: grid;
+    gap: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.thread-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(255, 56, 92, 0.24);
+}
+
+.thread-card-top,
+.thread-footer,
+.message-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.thread-pill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.thread-meta {
+    margin: 0;
+}
+
+.thread-unread-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--color-brand);
+    color: #fff;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.thread-footer {
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.thread-preview span,
+.chat-back-link,
+.message-card span {
+    color: var(--color-text-muted);
+}
+
+.message-stream {
+    padding: 18px;
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+    min-height: 320px;
+    background:
+        linear-gradient(180deg, #ffffff, #fffafb);
+}
+
+.message-card {
+    max-width: 78%;
+    border-radius: 18px;
+    background: #f7f7f7;
+    padding: 12px 14px;
+    border: 1px solid #ededed;
+}
+
+.message-card.mine {
+    margin-left: auto;
+    background: #fff1f2;
+    border-color: #ffd5dd;
+}
+
+.message-card p {
+    color: #222;
+    margin: 6px 0;
+}
+
+.message-card span {
+    font-size: 0.8rem;
+}
+
+.message-form {
+    padding: 18px;
+    display: grid;
+    gap: 12px;
+}
+
+.message-form textarea {
+    min-height: 118px;
+    border-radius: 18px;
+    border-color: #e6e6e6;
+    box-shadow: none !important;
+}
+
+.message-form textarea:focus {
+    border-color: var(--color-brand);
+}
+
+.message-form-footer span {
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.chat-send-btn {
+    justify-self: flex-end;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-brand);
+    color: #fff;
+    padding: 12px 18px;
+    font-weight: 700;
+}
+
+@media (max-width: 576px) {
+    .chat-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .thread-card-top,
+    .thread-footer,
+    .message-form-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .message-card {
+        max-width: 100%;
+    }
+}
