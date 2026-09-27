@@ -2,7 +2,7 @@
   "engines": {
     "node": "v22.19.0"
   },
-  "name": "major-project",
+  "name": "urban-stay",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
