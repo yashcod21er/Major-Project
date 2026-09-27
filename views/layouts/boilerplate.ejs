@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle || siteMeta.title %></title>
-    <meta name="description" content="<%= pageDescription || siteMeta.description %>">
+    <title><%= (typeof pageTitle !== 'undefined' && pageTitle) ? pageTitle : (typeof siteMeta !== 'undefined' && siteMeta?.title ? siteMeta.title : 'UrbanStay') %></title>
+    <meta name="description" content="<%= (typeof pageDescription !== 'undefined' && pageDescription) ? pageDescription : (typeof siteMeta !== 'undefined' && siteMeta?.description ? siteMeta.description : 'Discover trusted stays with UrbanStay') %>">
     <meta name="theme-color" content="#ff385c">
     <meta name="color-scheme" content="light">
     <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">

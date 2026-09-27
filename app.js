@@ -57,7 +57,7 @@ const formatMongoConnectionError = (error) => {
     const message = String(error?.message || '').trim();
 
     if (/query(?:Srv|Txt)\s+(?:ESERVFAIL|ENOTFOUND)/i.test(message)) {
-        return `MongoDB DNS lookup failed for the Atlas cluster. Set MONGODB_DNS_SERVERS in .env or verify your DNS/network settings. Original error: ${message}`;
+        return `MongoDB DNS lookup failed for the Atlas cluster. Verify that your cluster is active (not paused/deleted in MongoDB Atlas), check the hostname in ATLAS_URI, or set MONGODB_DNS_SERVERS in .env. Original error: ${message}`;
     }
 
     if (/whitelist/i.test(message) || /IP that isn't whitelisted/i.test(message)) {
@@ -87,6 +87,8 @@ app.use((req, res, next) => {
 
     res.locals.currentPath = req.path;
     res.locals.currentYear = new Date().getFullYear();
+    res.locals.pageTitle = '';
+    res.locals.pageDescription = '';
     res.locals.siteMeta = {
         title: 'UrbanStay',
         description: 'UrbanStay helps guests discover trusted stays with clear content, secure booking, and responsive browsing across devices.',
@@ -226,6 +228,10 @@ async function startServer() {
             attachLocals().then(() => next()).catch(next);
         });
 
+        app.get('/', (req, res) => {
+            res.redirect('/listings');
+        });
+
         app.use('/listings', listingRoutes);
         app.use('/listings/:id/reviews', reviewRoutes);
         app.use('/admin', adminRoutes);
@@ -241,7 +247,12 @@ async function startServer() {
 
         app.use((err, req, res, next) => {
             let { statusCode = 500, message = 'Something went wrong!' } = err;
-            res.status(statusCode).render('listings/error.ejs', { message, statusCode });
+            res.status(statusCode).render('listings/error.ejs', {
+                message,
+                statusCode,
+                pageTitle: `${statusCode} | UrbanStay`,
+                pageDescription: message,
+            });
         });
 
         app.listen(port, () => {

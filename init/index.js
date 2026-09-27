@@ -2,6 +2,7 @@ if (process.env.NODE_ENV !== "production") {
     require("dotenv").config();
 }
 
+const dns = require("dns");
 const mongoose = require("mongoose");
 const initdata = require("./data.js");
 const Listing = require("../models/listing.js");
@@ -14,16 +15,28 @@ const demoOwnerEmail = (process.env.SEED_OWNER_EMAIL || "demo-owner@urbanstay.de
 const demoOwnerUsername = (process.env.SEED_OWNER_USERNAME || "demoowner").trim();
 const demoOwnerPassword = (process.env.SEED_OWNER_PASSWORD || "UrbanStay123!").trim();
 const DEFAULT_AMENITIES = ["Wi-Fi", "Pool", "Parking", "AC", "Kitchen", "Workspace", "Pets allowed"];
+const mongoDnsServers = String(process.env.MONGODB_DNS_SERVERS || "8.8.8.8,1.1.1.1")
+    .split(",")
+    .map((server) => server.trim())
+    .filter(Boolean);
+
+const configureMongoDns = (dbUrl) => {
+    if (!dbUrl.startsWith("mongodb+srv://") || !mongoDnsServers.length) {
+        return;
+    }
+
+    dns.setServers(mongoDnsServers);
+};
 
 const formatMongoConnectionError = (error) => {
     const message = String(error?.message || "").trim();
 
     if (/whitelist/i.test(message) || /IP that isn't whitelisted/i.test(message)) {
-        return `MongoDB Atlas rejected this connection because the current IP address is not allowed. Original error: ${message}`;
+        return `MongoDB Atlas rejected this connection because the current IP address is not allowed. Add your current IP in Atlas Network Access and try again. Original error: ${message}`;
     }
 
     if (/query(?:Srv|Txt)\s+(?:ESERVFAIL|ENOTFOUND)/i.test(message)) {
-        return `MongoDB DNS lookup failed for the Atlas cluster. Original error: ${message}`;
+        return `MongoDB DNS lookup failed for the Atlas cluster. Verify that your cluster is active (not paused/deleted in MongoDB Atlas), check the hostname in ATLAS_URI, or set MONGODB_DNS_SERVERS in .env. Original error: ${message}`;
     }
 
     return `MongoDB connection failed: ${message || "Unknown error."}`;
@@ -36,6 +49,7 @@ async function connectDatabase() {
 
     if (atlasDbUrl) {
         try {
+            configureMongoDns(atlasDbUrl);
             await mongoose.connect(atlasDbUrl, { serverSelectionTimeoutMS: 10000 });
             console.log(`Connected to MongoDB via Atlas (${mongoose.connection.db.databaseName})`);
             return;
