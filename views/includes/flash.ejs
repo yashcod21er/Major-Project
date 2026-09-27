@@ -1,14 +1,21 @@
+<div class="alert-shell" aria-live="polite" aria-atomic="true">
+    <% if(success && success.length > 0){ %>
+        <div class="alert alert-success alert-dismissible fade show" role="status">
+            <div class="alert-content">
+                <span class="alert-icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></span>
+                <div class="alert-copy"><%= success %></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
 
-<% if(success && success.length > 0){ %>
-    <div class="alert alert-success alert-dismissible fade show col-6 offset-3" role="alert">
-    <%= success %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <% if(error && error.length > 0){ %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert-content">
+                <span class="alert-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+                <div class="alert-copy"><%= error %></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
 </div>
-<% } %>
-
-<% if(error && error.length > 0){ %>
-    <div class="alert alert-danger alert-dismissible fade show col-6 offset-3" role="alert">
-    <%= error %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-<% } %>

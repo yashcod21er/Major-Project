@@ -5,9 +5,17 @@
     function initializeGallery() {
         const galleryRoot = document.querySelector("[data-gallery-root]");
         const activeImage = document.querySelector("[data-gallery-active]");
-        const previousButton = document.querySelector("[data-gallery-prev]");
-        const nextButton = document.querySelector("[data-gallery-next]");
+        const previousButton = document.querySelector(".gallery-stage [data-gallery-prev]");
+        const nextButton = document.querySelector(".gallery-stage [data-gallery-next]");
         const thumbButtons = Array.from(document.querySelectorAll("[data-gallery-thumb]"));
+        const openButton = document.querySelector("[data-gallery-open]");
+        const lightbox = document.querySelector("[data-gallery-lightbox]");
+        const lightboxImage = document.querySelector("[data-gallery-lightbox-image]");
+        const lightboxCloseButton = document.querySelector("[data-gallery-close]");
+        const lightboxPreviousButton = document.querySelector("[data-gallery-lightbox-prev]");
+        const lightboxNextButton = document.querySelector("[data-gallery-lightbox-next]");
+        const lightboxCounter = document.querySelector("[data-gallery-counter]");
+        const lightboxCaption = document.querySelector("[data-gallery-caption]");
 
         if (!galleryRoot || !activeImage || !thumbButtons.length) {
             return;
@@ -32,11 +40,49 @@
             thumbButtons.forEach((button, index) => {
                 button.classList.toggle("active", index === activeIndex);
             });
+
+            if (lightboxImage) {
+                lightboxImage.src = activeThumb.dataset.imageUrl;
+                lightboxImage.alt = activeThumb.dataset.imageAlt;
+            }
+
+            if (lightboxCounter) {
+                lightboxCounter.textContent = `${activeIndex + 1} / ${thumbButtons.length}`;
+            }
+
+            if (lightboxCaption) {
+                lightboxCaption.textContent = activeThumb.dataset.imageAlt || "";
+            }
+        };
+
+        const openLightbox = () => {
+            if (!lightbox) {
+                return;
+            }
+
+            updateGallery(activeIndex);
+            lightbox.hidden = false;
+            document.body.classList.add("gallery-lightbox-open");
+        };
+
+        const closeLightbox = () => {
+            if (!lightbox) {
+                return;
+            }
+
+            lightbox.hidden = true;
+            document.body.classList.remove("gallery-lightbox-open");
         };
 
         thumbButtons.forEach((button, index) => {
             button.addEventListener("click", () => updateGallery(index));
         });
+
+        activeImage.addEventListener("click", openLightbox);
+
+        if (openButton) {
+            openButton.addEventListener("click", openLightbox);
+        }
 
         if (previousButton) {
             previousButton.addEventListener("click", () => updateGallery(activeIndex - 1));
@@ -45,6 +91,46 @@
         if (nextButton) {
             nextButton.addEventListener("click", () => updateGallery(activeIndex + 1));
         }
+
+        if (lightboxPreviousButton) {
+            lightboxPreviousButton.addEventListener("click", () => updateGallery(activeIndex - 1));
+        }
+
+        if (lightboxNextButton) {
+            lightboxNextButton.addEventListener("click", () => updateGallery(activeIndex + 1));
+        }
+
+        if (lightboxCloseButton) {
+            lightboxCloseButton.addEventListener("click", closeLightbox);
+        }
+
+        if (lightbox) {
+            lightbox.addEventListener("click", (event) => {
+                if (event.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (!lightbox || lightbox.hidden) {
+                return;
+            }
+
+            if (event.key === "Escape") {
+                closeLightbox();
+            }
+
+            if (event.key === "ArrowLeft") {
+                updateGallery(activeIndex - 1);
+            }
+
+            if (event.key === "ArrowRight") {
+                updateGallery(activeIndex + 1);
+            }
+        });
+
+        updateGallery(activeIndex);
     }
 
     function initializeBookingForm() {

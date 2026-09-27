@@ -27,6 +27,16 @@ router
     .get(Controller.renderLoginForm)
     .post(saveRedirectUrl, WrapAsync(Controller.login));
 
+router
+    .route("/forgot-password")
+    .get(Controller.renderForgotPasswordForm)
+    .post(WrapAsync(Controller.requestPasswordReset));
+
+router
+    .route("/reset-password/:token")
+    .get(WrapAsync(Controller.renderResetPasswordForm))
+    .post(WrapAsync(Controller.resetPassword));
+
 router.get("/profile", isLoggedIn, WrapAsync(Controller.profile));
 router.get("/wishlist", isLoggedIn, WrapAsync(Controller.wishlist));
 router.post("/saved-searches", isLoggedIn, validateSavedSearch, WrapAsync(Controller.saveSearch));

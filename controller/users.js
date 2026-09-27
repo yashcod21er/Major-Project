@@ -1,7 +1,8 @@
+const crypto = require("crypto");
 const User = require("../models/user");
 const Listing = require("../models/listing");
 const { sendEmail } = require("../utils/email");
-const { buildSimpleEmail } = require("../utils/emailTemplates");
+const { buildSimpleEmail, buildActionEmail } = require("../utils/emailTemplates");
 
 const getCoverImage = (listing) => {
     if (Array.isArray(listing.gallery) && listing.gallery.length) {
@@ -27,13 +28,36 @@ const formatDateLabel = (date) => new Date(date).toLocaleDateString("en-IN", {
     year: "numeric",
 });
 
+const PASSWORD_RESET_WINDOW_MS = 60 * 60 * 1000;
+
+const createPasswordResetToken = () => crypto.randomBytes(32).toString("hex");
+
+const hashPasswordResetToken = (token) =>
+    crypto.createHash("sha256").update(String(token || "")).digest("hex");
+
+const getPasswordResetUrl = (req, token) => `${req.protocol}://${req.get("host")}/reset-password/${token}`;
+
 module.exports.renderSignupForm = (req, res) => {
     res.render("./users/signup.ejs");
 };
 
 module.exports.signup = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const username = String(req.body.username || "").trim();
+        const email = String(req.body.email || "").trim().toLowerCase();
+        const password = String(req.body.password || "");
+
+        if (!username || !email || !password) {
+            req.flash("error", "Username, email, and password are required.");
+            return res.redirect("/user/signup");
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            req.flash("error", "That email is already registered. Log in or reset your password.");
+            return res.redirect("/user/signup");
+        }
+
         const user = new User({
             username,
             email,
@@ -71,6 +95,11 @@ module.exports.signup = async (req, res) => {
         delete req.session.redirectTo;
         return res.redirect(redirectUrl);
     } catch (error) {
+        if (error?.code === 11000 && error?.keyPattern?.email) {
+            req.flash("error", "That email is already registered. Log in or reset your password.");
+            return res.redirect("/user/signup");
+        }
+
         req.flash("error", error.message);
         return res.redirect("/user/signup");
     }
@@ -80,8 +109,99 @@ module.exports.renderLoginForm = (req, res) => {
     res.render("./users/login.ejs");
 };
 
+module.exports.renderForgotPasswordForm = (req, res) => {
+    res.render("./users/forgotPassword.ejs");
+};
+
+module.exports.requestPasswordReset = async (req, res) => {
+    const email = String(req.body.email || "").trim().toLowerCase();
+
+    if (!email) {
+        req.flash("error", "Enter your account email to continue.");
+        return res.redirect("/forgot-password");
+    }
+
+    const user = await User.findOne({ email });
+    if (user) {
+        const token = createPasswordResetToken();
+        user.passwordResetTokenHash = hashPasswordResetToken(token);
+        user.passwordResetExpiresAt = new Date(Date.now() + PASSWORD_RESET_WINDOW_MS);
+        await user.save();
+
+        const resetUrl = getPasswordResetUrl(req, token);
+        const passwordResetEmail = buildActionEmail({
+            title: "Reset your UrbanStay password",
+            intro: `Hi ${user.username || "there"}, use the secure link below to choose a new password for your UrbanStay account.`,
+            actionLabel: "Reset password",
+            actionUrl: resetUrl,
+            outro: "This link expires in 60 minutes. If you did not request this, you can ignore this email.",
+        });
+
+        await Promise.resolve(sendEmail({
+            to: user.email,
+            subject: "Reset your UrbanStay password",
+            html: passwordResetEmail.html,
+            text: passwordResetEmail.text,
+        })).catch(() => {});
+    }
+
+    req.flash("success", "If that email is registered, a password reset link has been sent.");
+        return res.redirect("/login");
+};
+
+module.exports.renderResetPasswordForm = async (req, res) => {
+    const tokenHash = hashPasswordResetToken(req.params.token);
+    const user = await User.findOne({
+        passwordResetTokenHash: tokenHash,
+        passwordResetExpiresAt: { $gt: new Date() },
+    });
+
+    if (!user) {
+        req.flash("error", "That password reset link is invalid or has expired.");
+        return res.redirect("/forgot-password");
+    }
+
+    return res.render("./users/resetPassword.ejs", { resetToken: req.params.token });
+};
+
+module.exports.resetPassword = async (req, res) => {
+    const { token } = req.params;
+    const password = String(req.body.password || "");
+    const confirmPassword = String(req.body.confirmPassword || "");
+
+    if (!password || password.length < 6) {
+        req.flash("error", "Password must be at least 6 characters long.");
+        return res.redirect(`/reset-password/${token}`);
+    }
+
+    if (password !== confirmPassword) {
+        req.flash("error", "Password confirmation does not match.");
+        return res.redirect(`/reset-password/${token}`);
+    }
+
+    const tokenHash = hashPasswordResetToken(token);
+    const user = await User.findOne({
+        passwordResetTokenHash: tokenHash,
+        passwordResetExpiresAt: { $gt: new Date() },
+    });
+
+    if (!user) {
+        req.flash("error", "That password reset link is invalid or has expired.");
+        return res.redirect("/forgot-password");
+    }
+
+    await user.setPassword(password);
+    user.passwordResetTokenHash = "";
+    user.passwordResetExpiresAt = null;
+    await user.save();
+
+    req.flash("success", "Password updated. Log in with your new password.");
+    return res.redirect("/login");
+};
+
 module.exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
 
     if (!email || !password) {
         req.flash("error", "Email and password are required.");
@@ -127,14 +247,12 @@ module.exports.login = async (req, res) => {
 
 module.exports.profile = async (req, res) => {
     const userId = req.user._id;
-    const recentlyViewedIds = Array.isArray(req.session.recentlyViewedListings) ? req.session.recentlyViewedListings : [];
 
-    const [currentUser, ownedListings, wishlistListings, bookedListings, recentlyViewedListings] = await Promise.all([
+    const [currentUser, ownedListings, wishlistListings, bookedListings] = await Promise.all([
         User.findById(userId),
         Listing.find({ owner: userId }).sort({ createdAt: -1, _id: -1 }).populate("owner").populate("bookings.guest"),
         Listing.find({ likes: userId }).sort({ createdAt: -1, _id: -1 }).populate("owner"),
         Listing.find({ "bookings.guest": userId }).sort({ createdAt: -1, _id: -1 }).populate("owner"),
-        Listing.find({ _id: { $in: recentlyViewedIds } }).populate("owner"),
     ]);
 
     const stats = ownedListings.reduce(
@@ -182,15 +300,13 @@ module.exports.profile = async (req, res) => {
 
     const normalizedOwnedListings = ownedListings.map(normalizeListingCard);
     const normalizedWishlist = wishlistListings.map(normalizeListingCard);
-    const normalizedRecentlyViewed = recentlyViewedListings
-        .sort((left, right) => recentlyViewedIds.indexOf(String(left._id)) - recentlyViewedIds.indexOf(String(right._id)))
-        .map(normalizeListingCard);
 
-    const recentTrips = bookedListings.flatMap((listing) => {
+    const bookingHistory = bookedListings.flatMap((listing) => {
         const matchingBookings = (listing.bookings || []).filter((booking) => String(booking.guest) === String(userId));
 
         return matchingBookings.map((booking) => ({
             bookingId: booking._id,
+            bookedAt: booking.createdAt,
             startDate: booking.startDate,
             endDate: booking.endDate,
             listingId: listing._id,
@@ -202,17 +318,19 @@ module.exports.profile = async (req, res) => {
             status: booking.status || "confirmed",
             paymentStatus: booking.payment?.status || "manual",
             paymentId: booking.payment?.paymentId || "",
+            refundStatus: booking.payment?.refundStatus || "none",
+            refundNote: booking.cancellation?.note || "",
+            hostName: listing.owner?.username || "Host",
         }));
-    }).sort((left, right) => new Date(left.startDate) - new Date(right.startDate));
+    }).sort((left, right) => new Date(right.bookedAt || right.startDate) - new Date(left.bookedAt || left.startDate));
 
     res.render("./users/profile.ejs", {
         currentUserProfile: currentUser,
         ownedListings: normalizedOwnedListings,
         wishlistListings: normalizedWishlist,
-        recentTrips,
+        bookingHistory,
         hostReservations,
         paymentHistory,
-        recentlyViewedListings: normalizedRecentlyViewed,
         savedSearches: currentUser?.savedSearches || [],
         stats: {
             totalListings: stats.totalListings,

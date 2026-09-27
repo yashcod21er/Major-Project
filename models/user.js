@@ -86,6 +86,8 @@ const userSchema = new Schema(
             type: String,
             required: true,
             unique: true,
+            trim: true,
+            lowercase: true,
         },
         isAdmin: {
             type: Boolean,
@@ -94,6 +96,14 @@ const userSchema = new Schema(
         isSuspended: {
             type: Boolean,
             default: false,
+        },
+        passwordResetTokenHash: {
+            type: String,
+            default: "",
+        },
+        passwordResetExpiresAt: {
+            type: Date,
+            default: null,
         },
         savedSearches: {
             type: [savedSearchSchema],

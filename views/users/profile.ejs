@@ -1,5 +1,5 @@
 <% layout("/layouts/boilerplate") %>
-<link rel="stylesheet" href="/css/profile.css?v=20260308-1">
+<link rel="stylesheet" href="/css/profile.css?v=20260315-1">
 
 <%
     const joinedDate = currentUserProfile?.createdAt
@@ -190,14 +190,14 @@
 
     <section class="dashboard-section">
         <div class="section-heading-row">
-            <h2>Upcoming trips</h2>
-            <span><%= recentTrips.length %> bookings</span>
+            <h2>Booking history</h2>
+            <span><%= bookingHistory.length %> bookings</span>
         </div>
-        <% if (!recentTrips.length) { %>
+        <% if (!bookingHistory.length) { %>
             <p class="empty-copy">You have not booked any stays yet.</p>
         <% } else { %>
             <div class="trip-grid">
-                <% recentTrips.forEach((trip) => { %>
+                <% bookingHistory.forEach((trip) => { %>
                     <article class="trip-card">
                         <a href="/listings/<%= trip.listingId %>">
                             <img src="<%= trip.coverImage && trip.coverImage.url ? trip.coverImage.url : '' %>" alt="<%= trip.title %>">
@@ -205,10 +205,15 @@
                         <div>
                             <h3><%= trip.title %></h3>
                             <p><%= trip.location %>, <%= trip.country %></p>
+                            <p class="wishlist-owner">Hosted by <%= trip.hostName %></p>
                             <span><%= formatDateLabel(trip.startDate) %> to <%= formatDateLabel(trip.endDate) %></span>
                             <div class="trip-meta-line">
                                 <span class="status-pill <%= trip.status %>"><%= trip.status %></span>
                                 <span>&#8377; <%= Number(trip.totalPrice || 0).toLocaleString("en-IN") %></span>
+                            </div>
+                            <div class="trip-meta-line">
+                                <span class="status-pill <%= trip.paymentStatus %>"><%= trip.paymentStatus %></span>
+                                <span class="status-pill <%= trip.refundStatus %>"><%= trip.refundStatus %></span>
                             </div>
                             <% if (trip.status !== "cancelled") { %>
                                 <div class="saved-search-actions">
@@ -218,7 +223,7 @@
                                     </form>
                                 </div>
                             <% } else { %>
-                                <p class="table-note">Payment status: <%= trip.paymentStatus %></p>
+                                <p class="table-note"><%= trip.refundNote || `Payment status: ${trip.paymentStatus}` %></p>
                             <% } %>
                         </div>
                     </article>
@@ -250,29 +255,6 @@
                                 <span><%= listing.reviewCount || 0 %> reviews</span>
                                 <span><%= Array.isArray(listing.likes) ? listing.likes.length : 0 %> saved</span>
                             </div>
-                        </div>
-                    </a>
-                <% }); %>
-            </div>
-        <% } %>
-    </section>
-
-    <section class="dashboard-section">
-        <div class="section-heading-row">
-            <h2>Recently viewed</h2>
-            <span><%= recentlyViewedListings.length %> stays</span>
-        </div>
-        <% if (!recentlyViewedListings.length) { %>
-            <p class="empty-copy">Browse a few listings and they will show up here.</p>
-        <% } else { %>
-            <div class="dashboard-card-grid">
-                <% recentlyViewedListings.forEach((listing) => { %>
-                    <a href="/listings/<%= listing._id %>" class="dashboard-listing-card compact">
-                        <img src="<%= listing.coverImage && listing.coverImage.url ? listing.coverImage.url : listing.image.url %>" alt="<%= listing.title %>">
-                        <div class="dashboard-listing-copy">
-                            <h3><%= listing.title %></h3>
-                            <p><%= listing.location %>, <%= listing.country %></p>
-                            <span class="wishlist-owner">Hosted by <%= listing.owner ? listing.owner.username : "Host" %></span>
                         </div>
                     </a>
                 <% }); %>

@@ -21,3 +21,23 @@ module.exports.buildSimpleEmail = ({ title, intro, lines = [] }) => {
         text: [intro, ...lines].join("\n"),
     };
 };
+
+module.exports.buildActionEmail = ({ title, intro, actionLabel, actionUrl, outro = "" }) => {
+    const htmlBody = `
+        <p style="color:#444;font-size:15px;line-height:1.7;">${intro}</p>
+        <p style="margin:20px 0;">
+            <a
+                href="${actionUrl}"
+                style="display:inline-block;background:#ff385c;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:999px;">
+                ${actionLabel}
+            </a>
+        </p>
+        <p style="color:#6b6b6b;font-size:13px;line-height:1.6;word-break:break-word;">If the button does not work, open this link: ${actionUrl}</p>
+        ${outro ? `<p style="color:#444;font-size:14px;line-height:1.7;">${outro}</p>` : ""}
+    `;
+
+    return {
+        html: wrapHtml(title, htmlBody),
+        text: [intro, `${actionLabel}: ${actionUrl}`, outro].filter(Boolean).join("\n\n"),
+    };
+};

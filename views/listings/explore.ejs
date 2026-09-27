@@ -1,3 +1,7 @@
+<%
+    pageTitle = "Explore stays by map | UrbanStay";
+    pageDescription = "Browse UrbanStay listings on an interactive map with responsive filters for dates and amenities.";
+%>
 <% layout("/layouts/boilerplate") %>
 <link rel="stylesheet" href="/css/explore.css?v=20260308-2">
 <link
@@ -52,7 +56,7 @@
             <div class="explore-sidebar">
             <% listings.forEach((listing) => { %>
                 <a href="/listings/<%= listing._id %>" class="explore-card" data-listing-card data-lat="<%= listing.geo?.lat %>" data-lng="<%= listing.geo?.lng %>" data-id="<%= listing._id %>">
-                    <img src="<%= listing.coverImage?.url || listing.image?.url %>" alt="<%= listing.title %>">
+                    <img src="<%= listing.coverImage?.url || listing.image?.url %>" alt="<%= listing.title %>" loading="lazy" decoding="async">
                     <div>
                         <h2><%= listing.title %></h2>
                         <p><%= listing.location %>, <%= listing.country %></p>

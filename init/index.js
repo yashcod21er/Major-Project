@@ -7,14 +7,53 @@ const initdata = require("./data.js");
 const Listing = require("../models/listing.js");
 const User = require("../models/user.js");
 
-const dbUrl = (process.env.ATLAS_URI || "").trim();
+const atlasDbUrl = (process.env.ATLAS_URI || "").trim();
+const localDbUrl = (process.env.LOCAL_MONGODB_URI || "mongodb://127.0.0.1:27017/Urbanstay").trim();
+const isProduction = process.env.NODE_ENV === "production";
 const demoOwnerEmail = (process.env.SEED_OWNER_EMAIL || "demo-owner@urbanstay.dev").trim();
 const demoOwnerUsername = (process.env.SEED_OWNER_USERNAME || "demoowner").trim();
 const demoOwnerPassword = (process.env.SEED_OWNER_PASSWORD || "UrbanStay123!").trim();
 const DEFAULT_AMENITIES = ["Wi-Fi", "Pool", "Parking", "AC", "Kitchen", "Workspace", "Pets allowed"];
 
-if (!dbUrl) {
-    throw new Error("ATLAS_URI is missing in .env");
+const formatMongoConnectionError = (error) => {
+    const message = String(error?.message || "").trim();
+
+    if (/whitelist/i.test(message) || /IP that isn't whitelisted/i.test(message)) {
+        return `MongoDB Atlas rejected this connection because the current IP address is not allowed. Original error: ${message}`;
+    }
+
+    if (/query(?:Srv|Txt)\s+(?:ESERVFAIL|ENOTFOUND)/i.test(message)) {
+        return `MongoDB DNS lookup failed for the Atlas cluster. Original error: ${message}`;
+    }
+
+    return `MongoDB connection failed: ${message || "Unknown error."}`;
+};
+
+async function connectDatabase() {
+    if (!atlasDbUrl && !localDbUrl) {
+        throw new Error("No MongoDB connection string is configured.");
+    }
+
+    if (atlasDbUrl) {
+        try {
+            await mongoose.connect(atlasDbUrl, { serverSelectionTimeoutMS: 10000 });
+            console.log(`Connected to MongoDB via Atlas (${mongoose.connection.db.databaseName})`);
+            return;
+        } catch (error) {
+            const formattedError = formatMongoConnectionError(error);
+            const canFallbackToLocal = !isProduction && Boolean(localDbUrl);
+
+            if (!canFallbackToLocal) {
+                throw new Error(formattedError);
+            }
+
+            console.warn(`${formattedError}\nFalling back to local MongoDB for development.`);
+            await mongoose.disconnect().catch(() => {});
+        }
+    }
+
+    await mongoose.connect(localDbUrl, { serverSelectionTimeoutMS: 10000 });
+    console.log(`Connected to MongoDB via local MongoDB (${mongoose.connection.db.databaseName})`);
 }
 
 function buildAmenities(seed, index) {
@@ -114,8 +153,7 @@ async function seedListings(ownerId) {
 }
 
 async function main() {
-    await mongoose.connect(dbUrl, { serverSelectionTimeoutMS: 10000 });
-    console.log("Connected to MongoDB");
+    await connectDatabase();
 
     const owner = await ensureOwner();
     await seedListings(owner._id);

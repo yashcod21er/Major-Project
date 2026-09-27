@@ -1,7 +1,6 @@
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+require('dotenv').config();
 
+const dns = require('dns');
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
@@ -25,39 +24,154 @@ const ChatThread = require('./models/chatThread.js');
 const Notification = require('./models/notification.js');
 
 const port = process.env.PORT || 3000;
-const dbUrl = (process.env.ATLAS_URI || '').trim();
+const atlasDbUrl = (process.env.ATLAS_URI || '').trim();
+const localDbUrl = (process.env.LOCAL_MONGODB_URI || 'mongodb://127.0.0.1:27017/Urbanstay').trim();
 const sessionSecret = (process.env.SECRET_KEY || 'dev-secret').trim();
+const isProduction = process.env.NODE_ENV === 'production';
+const configuredDbName = (process.env.MONGODB_DB_NAME || '').trim();
+const mongoDnsServers = String(process.env.MONGODB_DNS_SERVERS || '8.8.8.8,1.1.1.1')
+    .split(',')
+    .map((server) => server.trim())
+    .filter(Boolean);
 
+const getDatabaseNameFromUri = (uri) => {
+    try {
+        const parsed = new URL(uri);
+        return (parsed.pathname || '/').replace(/^\/+/, '').trim();
+    } catch (error) {
+        return '';
+    }
+};
+
+const resolvedDbName = configuredDbName || getDatabaseNameFromUri(atlasDbUrl) || getDatabaseNameFromUri(localDbUrl) || 'Urbanstay';
+
+const configureMongoDns = (dbUrl) => {
+    if (!dbUrl.startsWith('mongodb+srv://') || !mongoDnsServers.length) {
+        return;
+    }
+
+    dns.setServers(mongoDnsServers);
+};
+
+const formatMongoConnectionError = (error) => {
+    const message = String(error?.message || '').trim();
+
+    if (/query(?:Srv|Txt)\s+(?:ESERVFAIL|ENOTFOUND)/i.test(message)) {
+        return `MongoDB DNS lookup failed for the Atlas cluster. Set MONGODB_DNS_SERVERS in .env or verify your DNS/network settings. Original error: ${message}`;
+    }
+
+    if (/whitelist/i.test(message) || /IP that isn't whitelisted/i.test(message)) {
+        return `MongoDB Atlas rejected this connection because the current IP address is not allowed. Add your current IP in Atlas Network Access and try again. Original error: ${message}`;
+    }
+
+    return `MongoDB connection failed: ${message || 'Unknown error.'}`;
+};
+
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, '/public')));
 app.use(methodOverride('_method'));
+app.use((req, res, next) => {
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-if (!dbUrl) {
-    console.error('ATLAS_URI is missing in .env');
-    process.exit(1);
+    if (isProduction && req.secure) {
+        res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+    }
+
+    res.locals.currentPath = req.path;
+    res.locals.currentYear = new Date().getFullYear();
+    res.locals.siteMeta = {
+        title: 'UrbanStay',
+        description: 'UrbanStay helps guests discover trusted stays with clear content, secure booking, and responsive browsing across devices.',
+    };
+    next();
+});
+app.use(express.static(path.join(__dirname, '/public'), {
+    etag: true,
+    maxAge: isProduction ? '7d' : 0,
+    setHeaders: (res, filePath) => {
+        if (/\.(css|js|png|jpg|jpeg|svg|webp|ico|woff2?)$/i.test(filePath)) {
+            res.setHeader(
+                'Cache-Control',
+                isProduction ? 'public, max-age=604800, immutable' : 'public, max-age=0, must-revalidate'
+            );
+        }
+    }
+}));
+
+const connectWithUrl = async (dbUrl, connectionLabel) => {
+    configureMongoDns(dbUrl);
+    await mongoose.connect(dbUrl, {
+        dbName: configuredDbName || undefined,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 20000,
+    });
+    console.log(`Connected to MongoDB via ${connectionLabel} (${mongoose.connection.db.databaseName})`);
+};
+
+async function connectDatabase() {
+    try {
+        if (!atlasDbUrl && !localDbUrl) {
+            throw new Error('No MongoDB connection string is configured.');
+        }
+
+        if (atlasDbUrl) {
+            try {
+                await connectWithUrl(atlasDbUrl, 'Atlas');
+                return;
+            } catch (error) {
+                const formattedError = formatMongoConnectionError(error);
+                const canFallbackToLocal = !isProduction && Boolean(localDbUrl);
+
+                if (!canFallbackToLocal) {
+                    throw new Error(formattedError);
+                }
+
+                console.warn(`${formattedError}\nFalling back to local MongoDB for development.`);
+                await mongoose.disconnect().catch(() => {});
+            }
+        }
+
+        await connectWithUrl(localDbUrl, 'local MongoDB');
+    } catch (error) {
+        const message = String(error?.message || '').trim();
+        throw new Error(/^MongoDB /i.test(message) ? message : formatMongoConnectionError(error));
+    }
 }
 
-async function startServer() {
+function createSessionStore() {
     try {
-        await mongoose.connect(dbUrl, { serverSelectionTimeoutMS: 10000 });
-        console.log('Connected to MongoDB');
-
         const store = MongoStore.create({
             client: mongoose.connection.getClient(),
-            dbName: mongoose.connection.db.databaseName,
+            dbName: mongoose.connection.db?.databaseName || resolvedDbName,
             crypto: {
                 secret: sessionSecret,
             },
             touchAfter: 24 * 60 * 60
         });
 
-        store.on('error', (e) => {
-            console.error('Session Store Error:', e.message);
+        store.on('error', (error) => {
+            console.error('Session Store Error:', error.message);
         });
+
+        return store;
+    } catch (error) {
+        throw new Error(`Session store initialization failed: ${error.message}`);
+    }
+}
+
+async function startServer() {
+    try {
+        await connectDatabase();
+        const store = createSessionStore();
 
         app.use(session({
             store,
@@ -65,9 +179,11 @@ async function startServer() {
             resave: false,
             saveUninitialized: false,
             cookie: {
-                expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+                expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
                 maxAge: 1000 * 60 * 60 * 24 * 7,
-                httpOnly: true
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: isProduction
             }
         }));
 
@@ -132,9 +248,8 @@ async function startServer() {
             console.log(`Server is running on http://localhost:${port}`);
         });
     } catch (err) {
-        console.error('Failed to connect to MongoDB Atlas.');
+        console.error('Server startup failed.');
         console.error(err.message);
-        console.error('Check Atlas Network Access (IP whitelist) and ATLAS_URI in .env.');
         process.exit(1);
     }
 }

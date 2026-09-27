@@ -35,11 +35,28 @@ const SORT_COMPARATORS = {
     mostLiked: (left, right) => (right.likes?.length || 0) - (left.likes?.length || 0),
 };
 
+const REVIEW_SORT_OPTIONS = {
+    newest: { label: "Newest first" },
+    oldest: { label: "Oldest first" },
+    highest: { label: "Highest rating" },
+    lowest: { label: "Lowest rating" },
+};
+
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const parsePositiveInt = (rawValue, fallback) => {
     const parsed = Number.parseInt(rawValue, 10);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const parseReviewRatingFilter = (rawValue) => {
+    const normalized = String(rawValue || "all").trim();
+    if (normalized === "all") {
+        return "all";
+    }
+
+    const parsed = Number.parseInt(normalized, 10);
+    return parsed >= 1 && parsed <= 5 ? String(parsed) : "all";
 };
 
 const getStringArray = (value) => {
@@ -76,6 +93,11 @@ const getGalleryImages = (listing) => {
 
     return [];
 };
+
+const normalizeListingCard = (listing) => ({
+    ...listing.toObject(),
+    coverImage: getGalleryImages(listing)[0] || listing.image,
+});
 
 const normalizeGallery = async (listing) => {
     const gallery = getGalleryImages(listing);
@@ -300,12 +322,6 @@ const ensureBookingAllowed = (listing, userId) => {
     return "";
 };
 
-const rememberRecentlyViewed = async (req, listingId) => {
-    const previous = Array.isArray(req.session.recentlyViewedListings) ? req.session.recentlyViewedListings : [];
-    req.session.recentlyViewedListings = [String(listingId), ...previous.filter((id) => id !== String(listingId))].slice(0, 6);
-    await saveSession(req);
-};
-
 const getRefundPolicySummary = (policy) => {
     switch (policy) {
         case "strict":
@@ -404,6 +420,28 @@ const sortListings = (listings, selectedSort) => {
     return listings.slice().sort(comparator);
 };
 
+const sortReviews = (reviews, selectedSort) => {
+    const sorted = reviews.slice();
+
+    switch (selectedSort) {
+        case "oldest":
+            return sorted.sort((left, right) => new Date(left.createdAt) - new Date(right.createdAt));
+        case "highest":
+            return sorted.sort((left, right) =>
+                Number(right.rating || 0) - Number(left.rating || 0) ||
+                new Date(right.createdAt) - new Date(left.createdAt)
+            );
+        case "lowest":
+            return sorted.sort((left, right) =>
+                Number(left.rating || 0) - Number(right.rating || 0) ||
+                new Date(right.createdAt) - new Date(left.createdAt)
+            );
+        case "newest":
+        default:
+            return sorted.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
+    }
+};
+
 module.exports.index = async (req, res) => {
     const searchQuery = (req.query.q || "").trim();
     const selectedSort = SORT_OPTIONS[req.query.sort] ? req.query.sort : "newest";
@@ -464,6 +502,7 @@ module.exports.index = async (req, res) => {
     const initialFilters = {
         q: searchQuery,
         sort: selectedSort,
+        page: String(currentPage),
         category: req.query.category || "all",
         country: selectedCountry,
         location: selectedLocation,
@@ -638,10 +677,10 @@ module.exports.showListing = async (req, res) => {
         await listing.save();
     }
 
-    await rememberRecentlyViewed(req, listing._id);
-
     const galleryImages = getGalleryImages(listing);
     const editingReviewId = typeof req.query.editReview === "string" ? req.query.editReview : "";
+    const reviewSort = REVIEW_SORT_OPTIONS[req.query.reviewSort] ? req.query.reviewSort : "newest";
+    const reviewRating = parseReviewRatingFilter(req.query.reviewRating);
     const upcomingBookings = (listing.bookings || [])
         .filter(isBookingActive)
         .slice()
@@ -666,6 +705,24 @@ module.exports.showListing = async (req, res) => {
         : "";
     const nearbyPlacesLive = await fetchNearbyPlaces(listing.geo);
     const calendarMonths = [buildCalendarMonth(blockedRanges, 0), buildCalendarMonth(blockedRanges, 1)];
+    const reviewCountsByRating = [5, 4, 3, 2, 1].reduce((accumulator, ratingValue) => ({
+        ...accumulator,
+        [ratingValue]: (listing.reviews || []).filter((review) => Number(review.rating) === ratingValue).length,
+    }), {});
+    const displayedReviews = sortReviews(
+        (listing.reviews || []).filter((review) => {
+            if (String(review._id) === editingReviewId) {
+                return true;
+            }
+
+            if (reviewRating === "all") {
+                return true;
+            }
+
+            return String(review.rating) === reviewRating;
+        }),
+        reviewSort
+    );
 
     res.render("./listings/show.ejs", {
         listing,
@@ -687,6 +744,11 @@ module.exports.showListing = async (req, res) => {
         nearbyPlacesLive,
         amenityOptions: AMENITY_OPTIONS,
         calendarMonths,
+        displayedReviews,
+        reviewSort,
+        reviewRating,
+        reviewSortOptions: REVIEW_SORT_OPTIONS,
+        reviewCountsByRating,
         policySummary: getRefundPolicySummary(listing.cancellationPolicy),
     });
 };
@@ -735,6 +797,22 @@ module.exports.addBlockedRange = async (req, res) => {
     res.redirect(`/listings/${id}#host-tools`);
 };
 
+module.exports.removeBlockedRange = async (req, res) => {
+    const { id, rangeId } = req.params;
+    const listing = await Listing.findById(id);
+
+    if (!listing) {
+        req.flash("error", "Listing not found.");
+        return res.redirect("/listings");
+    }
+
+    listing.unavailableRanges = (listing.unavailableRanges || []).filter((range) => String(range._id) !== String(rangeId));
+    await listing.save();
+
+    req.flash("success", "Blocked dates removed.");
+    res.redirect(`/listings/${id}#host-tools`);
+};
+
 module.exports.addSeasonalPrice = async (req, res) => {
     const { id } = req.params;
     const listing = await Listing.findById(id);
@@ -753,6 +831,22 @@ module.exports.addSeasonalPrice = async (req, res) => {
 
     await listing.save();
     req.flash("success", "Seasonal pricing saved.");
+    res.redirect(`/listings/${id}#host-tools`);
+};
+
+module.exports.removeSeasonalPrice = async (req, res) => {
+    const { id, seasonId } = req.params;
+    const listing = await Listing.findById(id);
+
+    if (!listing) {
+        req.flash("error", "Listing not found.");
+        return res.redirect("/listings");
+    }
+
+    listing.seasonalPricing = (listing.seasonalPricing || []).filter((season) => String(season._id) !== String(seasonId));
+    await listing.save();
+
+    req.flash("success", "Seasonal pricing rule removed.");
     res.redirect(`/listings/${id}#host-tools`);
 };
 

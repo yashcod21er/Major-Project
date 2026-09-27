@@ -38,6 +38,14 @@
     line-height: 1.05;
 }
 
+.listing-hero-copy {
+    max-width: 640px;
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: #5f5f5f;
+}
+
 .listing-feature-strip {
     display: flex;
     gap: 10px;
@@ -246,6 +254,24 @@
     color: #1f1f1f;
 }
 
+.listing-results-status {
+    margin: 4px 0 0;
+    color: #656565;
+    font-size: 0.9rem;
+}
+
+.recently-viewed-preview {
+    margin: 8px 0 6px;
+}
+
+.recently-viewed-head {
+    margin-bottom: 6px;
+}
+
+.recently-viewed-grid {
+    margin-bottom: 4px;
+}
+
 .listing-results-link {
     display: inline-flex;
     align-items: center;
@@ -361,6 +387,12 @@
 }
 
 .amenity-pill:has(input:checked) {
+    border-color: rgba(255, 56, 92, 0.4);
+    background: #fff6f8;
+    color: #1f1f1f;
+}
+
+.amenity-pill.is-checked {
     border-color: rgba(255, 56, 92, 0.4);
     background: #fff6f8;
     color: #1f1f1f;
@@ -729,7 +761,7 @@
 
 .listing-skeletons {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 18px;
     margin-bottom: 14px;
 }
@@ -756,6 +788,10 @@
     .availability-submit-btn {
         width: 100%;
     }
+
+    .listing-skeletons {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 767px) {
@@ -766,6 +802,11 @@
 
     .listing-feature-strip {
         gap: 8px;
+    }
+
+    .listing-hero-copy {
+        max-width: none;
+        font-size: 0.94rem;
     }
 
     .listing-feature-pill {
@@ -821,6 +862,10 @@
 
     .availability-date-group {
         grid-template-columns: 1fr;
+    }
+
+    .listing-skeletons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -1126,10 +1171,6 @@
         justify-content: center;
     }
 
-    .listing-skeletons {
-        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    }
-
     #listing-grid .listing-item {
         margin-bottom: 10px;
     }
@@ -1230,6 +1271,10 @@
 
     .card-text {
         font-size: 14px;
+    }
+
+    .listing-skeletons {
+        grid-template-columns: 1fr;
     }
 
     .pagination-link,

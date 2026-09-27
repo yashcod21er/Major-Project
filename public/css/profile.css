@@ -322,6 +322,23 @@
     color: #be123c;
 }
 
+.status-pill.none,
+.status-pill.manual {
+    background: #f5f5f5;
+    color: #444;
+}
+
+.status-pill.processing,
+.status-pill.pending {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.status-pill.completed {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
 .dashboard-card-grid,
 .trip-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

@@ -1,6 +1,10 @@
+<%
+    pageTitle = "Find your next stay | UrbanStay";
+    pageDescription = "Explore trusted stays with clear pricing, responsive filtering, fast browsing, and secure booking on UrbanStay.";
+%>
 <% layout("/layouts/boilerplate") %>
 
-<link rel="stylesheet" href="/css/listing.css?v=20260308-4">
+<link rel="stylesheet" href="/css/listing.css?v=20260315-1">
 <noscript>
     <style>
         #listing-skeletons { display: none !important; }
@@ -10,21 +14,8 @@
 
 <%
     const currentFilters = initialFilters || {};
-    const buildPageHref = (pageNumber) => {
-        const params = new URLSearchParams();
-        if (searchQuery) params.set("q", searchQuery);
-        if (selectedSort) params.set("sort", selectedSort);
-        if (currentFilters.category && currentFilters.category !== "all") params.set("category", currentFilters.category);
-        if (currentFilters.country) params.set("country", currentFilters.country);
-        if (currentFilters.location) params.set("location", currentFilters.location);
-        if (currentFilters.minPrice) params.set("minPrice", currentFilters.minPrice);
-        if (currentFilters.maxPrice) params.set("maxPrice", currentFilters.maxPrice);
-        if (currentFilters.checkIn) params.set("checkIn", currentFilters.checkIn);
-        if (currentFilters.checkOut) params.set("checkOut", currentFilters.checkOut);
-        (currentFilters.amenities || []).forEach((amenity) => params.append("amenities", amenity));
-        params.set("page", String(pageNumber));
-        return `/listings?${params.toString()}`;
-    };
+    const requestedPage = Number.parseInt(currentFilters.page || "1", 10);
+    const currentPage = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 %>
 
 <div
@@ -35,6 +26,7 @@
         <div class="listing-hero">
             <p class="listing-kicker">Discover</p>
             <h2 class="listing-page-title">Find your next stay</h2>
+            <p class="listing-hero-copy">Browse verified stays with clearer filters, readable pricing, and a faster booking flow that works cleanly across desktop and mobile.</p>
             <div class="listing-feature-strip" aria-label="Highlights">
                 <span class="listing-feature-pill">
                     <i class="fa-regular fa-heart"></i>
@@ -119,6 +111,7 @@
         data-has-active-filters="<%= Boolean(currentFilters.country || currentFilters.location || currentFilters.minPrice || currentFilters.maxPrice || currentFilters.checkIn || currentFilters.checkOut || (currentFilters.amenities || []).length) %>">
         <div class="airbnb-search-shell">
             <div class="filter-pill">
+                <label class="sr-only" for="country-filter">Filter stays by country</label>
                 <i class="fa-solid fa-earth-americas"></i>
                 <select id="country-filter">
                     <option value="">All countries</option>
@@ -127,6 +120,7 @@
             </div>
 
             <div class="filter-pill">
+                <label class="sr-only" for="location-filter">Filter stays by location</label>
                 <i class="fa-solid fa-location-dot"></i>
                 <select id="location-filter">
                     <option value="">All locations</option>
@@ -171,7 +165,7 @@
                         </button>
                     </form>
                 <% } else { %>
-                    <a href="/login" class="save-search-login-link">
+                    <a href="/user/login" class="save-search-login-link">
                         <i class="fa-regular fa-bookmark"></i>
                         Save filters
                     </a>
@@ -208,6 +202,7 @@
         <div>
             <p class="listing-results-kicker">Browse</p>
             <h3>All stays</h3>
+            <p class="listing-results-status" id="listing-results-status" aria-live="polite"><%= pagination.totalListings %> stays available.</p>
         </div>
         <% if (currentUser) { %>
             <a href="/profile#my-listings" class="listing-results-link">
@@ -217,8 +212,8 @@
         <% } %>
     </div>
 
-    <div id="listing-skeletons" class="listing-skeletons">
-        <% for (let i = 0; i < 8; i++) { %>
+    <div id="listing-skeletons" class="listing-skeletons d-none">
+        <% for (let i = 0; i < 12; i++) { %>
             <div class="skeleton-card">
                 <div class="skeleton-image shimmer"></div>
                 <div class="skeleton-lines">
@@ -230,8 +225,8 @@
         <% } %>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 d-none" id="listing-grid">
-        <% for (let listing of listings) { %>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4" id="listing-grid">
+        <% listings.forEach((listing, index) => { %>
             <% const coverImage = Array.isArray(listing.gallery) && listing.gallery.length ? listing.gallery[0] : listing.image; %>
             <% const listingLikes = Array.isArray(listing.likes) ? listing.likes : []; %>
             <% const isLiked = currentUser && listingLikes.some((likedUserId) => String(likedUserId) === String(currentUser._id)); %>
@@ -247,7 +242,10 @@
                             <img
                                 src="<%= coverImage && coverImage.url && coverImage.url.trim() !== '' ? coverImage.url : 'https://images.unsplash.com/photo-1505691938895-1758d7feb511' %>"
                                 class="card-img-top"
-                                alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night" />
+                                alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night"
+                                loading="<%= index < 4 ? 'eager' : 'lazy' %>"
+                                fetchpriority="<%= index === 0 ? 'high' : 'auto' %>"
+                                decoding="async" />
                         </a>
 
                         <div class="listing-card-badges">
@@ -289,7 +287,7 @@
                     </div>
                 </div>
             </div>
-        <% } %>
+        <% }); %>
     </div>
 
     <div id="no-listings-message" class="no-listings-message d-none">
@@ -299,36 +297,22 @@
         <button type="button" id="no-results-reset-btn" class="no-results-reset-btn">Clear all filters</button>
     </div>
 
-    <% if (pagination.totalPages > 1) { %>
-        <nav class="pagination-shell" aria-label="Listing pages">
-            <a
-                href="<%= pagination.currentPage > 1 ? buildPageHref(pagination.currentPage - 1) : '#' %>"
-                class="pagination-link <%= pagination.currentPage === 1 ? 'disabled' : '' %>"
-                data-page-number="<%= pagination.currentPage - 1 %>">
-                <i class="fa-solid fa-arrow-left"></i>
-                Previous
-            </a>
+    <nav class="pagination-shell" id="client-pagination" aria-label="Listing pages">
+        <a href="#" class="pagination-link" id="pagination-prev">
+            <i class="fa-solid fa-arrow-left"></i>
+            Previous
+        </a>
 
-            <div class="pagination-pages">
-                <% for (let pageNumber = 1; pageNumber <= pagination.totalPages; pageNumber++) { %>
-                    <a
-                        href="<%= buildPageHref(pageNumber) %>"
-                        class="pagination-page <%= pageNumber === pagination.currentPage ? 'active' : '' %>"
-                        data-page-number="<%= pageNumber %>">
-                        <%= pageNumber %>
-                    </a>
-                <% } %>
-            </div>
+        <div class="pagination-pages" id="pagination-pages">
+            <a href="#" class="pagination-page active" data-page-number="<%= currentPage %>"><%= currentPage %></a>
+        </div>
 
-            <a
-                href="<%= pagination.currentPage < pagination.totalPages ? buildPageHref(pagination.currentPage + 1) : '#' %>"
-                class="pagination-link <%= pagination.currentPage === pagination.totalPages ? 'disabled' : '' %>"
-                data-page-number="<%= pagination.currentPage + 1 %>">
-                Next
-                <i class="fa-solid fa-arrow-right"></i>
-            </a>
-        </nav>
-    <% } %>
+        <a href="#" class="pagination-link" id="pagination-next">
+            Next
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </nav>
+
 </div>
 
-<script src="/js/index.js?v=20260308-2"></script>
+<script src="/js/index.js?v=20260315-4"></script>

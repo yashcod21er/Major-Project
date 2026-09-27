@@ -1,6 +1,3 @@
-/* Navbar Container */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&family=Playfair+Display:wght@700&display=swap');
-
 :root {
     --font-base: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-display: 'Playfair Display', Georgia, serif;
@@ -115,7 +112,7 @@ a:focus-visible {
     font-size: 2rem;
 }
 
-.navbar-brand p {
+.navbar-brand span {
     font-size: 1.45rem;
     font-weight: 700;
     margin: 0;
@@ -142,6 +139,11 @@ a:focus-visible {
     background-color: #f4f4f4;
     color: var(--color-text) !important;
     transform: translateY(-1px);
+}
+
+.nav-link-current {
+    background: rgba(255, 56, 92, 0.1);
+    color: var(--color-brand) !important;
 }
 
 .nav-badge-link {
@@ -257,6 +259,11 @@ a:focus-visible {
 
 .user-initial-link:hover {
     background: transparent;
+}
+
+.user-initial-link.nav-link-current {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px rgba(255, 56, 92, 0.2);
 }
 
 .user-initial-badge {
@@ -403,7 +410,7 @@ a:focus-visible {
         padding-right: 14px !important;
     }
 
-    .navbar-brand p {
+    .navbar-brand span {
         font-size: 1.25rem;
     }
 

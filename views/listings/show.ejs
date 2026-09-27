@@ -1,5 +1,9 @@
+<%
+    pageTitle = `${listing.title} | UrbanStay`;
+    pageDescription = `${listing.title} in ${listing.location}, ${listing.country}. View amenities, host details, reviews, map location, and secure booking options.`;
+%>
 <% layout("/layouts/boilerplate") %>
-<link rel="stylesheet" href="/css/show.css?v=20260308-1">
+<link rel="stylesheet" href="/css/show.css?v=20260315-1">
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -71,7 +75,9 @@
                     class="card-img-top show-img"
                     id="gallery-active-image"
                     data-gallery-active
-                    alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night">
+                    alt="<%= listing.title %> - <%= listing.price.toLocaleString('en-IN') %> per night"
+                    fetchpriority="high"
+                    decoding="async">
 
                 <% if (galleryImages.length > 1) { %>
                     <button type="button" class="gallery-nav next" data-gallery-next aria-label="Next photo">
@@ -81,6 +87,13 @@
             </div>
 
             <% if (galleryImages.length > 1) { %>
+                <div class="gallery-toolbar">
+                    <button type="button" class="gallery-open-btn" data-gallery-open>
+                        <i class="fa-regular fa-images"></i>
+                        <span>View all photos</span>
+                    </button>
+                    <span class="gallery-count"><%= galleryImages.length %> photos</span>
+                </div>
                 <div class="gallery-thumbs">
                     <% galleryImages.forEach((image, index) => { %>
                         <button
@@ -91,12 +104,33 @@
                             data-image-url="<%= image.url %>"
                             data-image-alt="<%= `${listing.title} photo ${index + 1}` %>"
                             aria-label="Open photo <%= index + 1 %>">
-                            <img src="<%= image.url %>" alt="<%= `${listing.title} thumbnail ${index + 1}` %>">
+                            <img src="<%= image.url %>" alt="<%= `${listing.title} thumbnail ${index + 1}` %>" loading="lazy" decoding="async">
                         </button>
                     <% }); %>
                 </div>
             <% } %>
         </section>
+
+        <div class="gallery-lightbox" data-gallery-lightbox hidden>
+            <button type="button" class="gallery-lightbox-close" data-gallery-close aria-label="Close photo viewer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <% if (galleryImages.length > 1) { %>
+                <button type="button" class="gallery-lightbox-nav prev" data-gallery-lightbox-prev aria-label="Previous photo">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button type="button" class="gallery-lightbox-nav next" data-gallery-lightbox-next aria-label="Next photo">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            <% } %>
+            <div class="gallery-lightbox-stage">
+                <img src="<%= initialImage.url %>" alt="<%= `${listing.title} photo 1` %>" data-gallery-lightbox-image>
+            </div>
+            <div class="gallery-lightbox-meta">
+                <span data-gallery-counter>1 / <%= galleryImages.length %></span>
+                <span data-gallery-caption><%= `${listing.title} photo 1` %></span>
+            </div>
+        </div>
 
         <section class="show-content-grid">
             <div class="show-main-column">
@@ -240,10 +274,52 @@
                                 <h5>Seasonal pricing rules</h5>
                                 <div class="blocked-date-list">
                                     <% listing.seasonalPricing.forEach((season) => { %>
-                                        <div class="blocked-date-item source-host">
-                                            <strong><%= season.label || "Seasonal pricing" %></strong>
-                                            <span><%= new Date(season.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %> to <%= new Date(season.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
-                                            <span>&#8377; <%= Number(season.nightlyPrice || 0).toLocaleString("en-IN") %>/night</span>
+                                        <div class="blocked-date-item source-host host-manage-item">
+                                            <div class="host-manage-copy">
+                                                <strong><%= season.label || "Seasonal pricing" %></strong>
+                                                <span><%= new Date(season.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %> to <%= new Date(season.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
+                                                <span>&#8377; <%= Number(season.nightlyPrice || 0).toLocaleString("en-IN") %>/night</span>
+                                            </div>
+                                            <form action="/listings/<%= listing._id %>/seasonal-pricing/<%= season._id %>/delete" method="POST">
+                                                <button type="submit" class="mini-manage-btn">Remove</button>
+                                            </form>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <% if ((listing.unavailableRanges || []).length) { %>
+                            <div class="host-tool-list">
+                                <h5>Blocked dates</h5>
+                                <div class="blocked-date-list">
+                                    <% listing.unavailableRanges.forEach((range) => { %>
+                                        <div class="blocked-date-item source-host host-manage-item">
+                                            <div class="host-manage-copy">
+                                                <strong><%= range.reason || "Host blocked dates" %></strong>
+                                                <span><%= new Date(range.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %> to <%= new Date(range.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
+                                            </div>
+                                            <form action="/listings/<%= listing._id %>/blocked-ranges/<%= range._id %>/delete" method="POST">
+                                                <button type="submit" class="mini-manage-btn">Remove</button>
+                                            </form>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <% if (upcomingBookings.length) { %>
+                            <div class="host-tool-list">
+                                <h5>Upcoming guest stays</h5>
+                                <div class="blocked-date-list">
+                                    <% upcomingBookings.forEach((booking) => { %>
+                                        <div class="blocked-date-item source-booking host-manage-item">
+                                            <div class="host-manage-copy">
+                                                <strong><%= booking.guest?.username || "Guest" %></strong>
+                                                <span><%= new Date(booking.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %> to <%= new Date(booking.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></span>
+                                                <span>&#8377; <%= Number(booking.totalPrice || 0).toLocaleString("en-IN") %> | <%= booking.payment?.status || "manual" %></span>
+                                            </div>
+                                            <a href="/listings/<%= listing._id %>/bookings/<%= booking._id %>/invoice.pdf" class="mini-manage-btn inline-action-link">Invoice</a>
                                         </div>
                                     <% }); %>
                                 </div>
@@ -274,12 +350,37 @@
                         </div>
                     </div>
 
+                    <% if (listing.reviews.length > 0) { %>
+                        <form method="GET" action="/listings/<%= listing._id %>" class="review-filter-form">
+                            <div class="review-filter-group">
+                                <label for="reviewSort">Sort</label>
+                                <select id="reviewSort" name="reviewSort" class="form-select">
+                                    <% for (const [sortKey, sortOption] of Object.entries(reviewSortOptions)) { %>
+                                        <option value="<%= sortKey %>" <%= reviewSort === sortKey ? "selected" : "" %>><%= sortOption.label %></option>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="review-filter-group">
+                                <label for="reviewRating">Rating</label>
+                                <select id="reviewRating" name="reviewRating" class="form-select">
+                                    <option value="all" <%= reviewRating === "all" ? "selected" : "" %>>All ratings</option>
+                                    <% [5, 4, 3, 2, 1].forEach((ratingValue) => { %>
+                                        <option value="<%= ratingValue %>" <%= reviewRating === String(ratingValue) ? "selected" : "" %>>
+                                            <%= ratingValue %> stars (<%= reviewCountsByRating[ratingValue] || 0 %>)
+                                        </option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm review-secondary-btn review-filter-submit">Apply</button>
+                        </form>
+                    <% } %>
+
                     <hr class="review-divider">
 
                     <div class="review-form-container">
                         <h4 class="review-heading">Leave a review</h4>
                         <% if (!currentUser) { %>
-                            <p class="review-text">Please <a href="/login">log in</a> to write a review.</p>
+                            <p class="review-text">Please <a href="/user/login">log in</a> to write a review.</p>
                         <% } else if (isOwnerView) { %>
                             <p class="review-text">You cannot review your own listing.</p>
                         <% } else { %>
@@ -321,9 +422,11 @@
 
                     <% if (listing.reviews.length === 0) { %>
                         <p class="review-text">No reviews yet. Be the first to leave one.</p>
+                    <% } else if (!displayedReviews.length) { %>
+                        <p class="review-text">No reviews match the selected filters.</p>
                     <% } else { %>
                         <div class="reviews-grid">
-                            <% for (let review of listing.reviews) { %>
+                            <% for (let review of displayedReviews) { %>
                                 <% const canEditReview = currentUser && review.author && currentUser._id.equals(review.author._id); %>
                                 <div class="card review-card" id="review-<%= review._id %>">
                                     <div class="card-body">
@@ -333,7 +436,7 @@
                                             </div>
                                             <div>
                                                 <h5 class="review-author"><%= review.author && review.author.username ? review.author.username : "User" %></h5>
-                                                <p class="review-date">Verified stay</p>
+                                                <p class="review-date">Reviewed on <%= new Date(review.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) %></p>
                                             </div>
                                             <span class="review-rating-badge">&#9733; <%= review.rating %></span>
                                         </div>
@@ -369,7 +472,7 @@
                                                 <div class="review-photo-grid">
                                                     <% review.images.forEach((image) => { %>
                                                         <a href="<%= image.url %>" target="_blank" rel="noreferrer" class="review-photo-tile">
-                                                            <img src="<%= image.url %>" alt="Review photo">
+                                                            <img src="<%= image.url %>" alt="Review photo" loading="lazy" decoding="async">
                                                         </a>
                                                     <% }); %>
                                                 </div>
@@ -493,4 +596,4 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <% } %>
 <script src="/js/showMap.js?v=20260307-1"></script>
-<script src="/js/showListing.js?v=20260307-2"></script>
+<script src="/js/showListing.js?v=20260315-1"></script>

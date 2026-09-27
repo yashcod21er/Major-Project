@@ -81,7 +81,9 @@ router.post("/:id/bookings", isLoggedIn, validateBooking, WrapAsync(Controller.c
 router.post("/:id/bookings/:bookingId/cancel", isLoggedIn, WrapAsync(Controller.cancelBooking));
 router.get("/:id/bookings/:bookingId/invoice.pdf", isLoggedIn, WrapAsync(Controller.downloadInvoice));
 router.post("/:id/blocked-ranges", isLoggedIn, isOwner, validateBlockedRange, WrapAsync(Controller.addBlockedRange));
+router.post("/:id/blocked-ranges/:rangeId/delete", isLoggedIn, isOwner, WrapAsync(Controller.removeBlockedRange));
 router.post("/:id/seasonal-pricing", isLoggedIn, isOwner, validateSeasonalPrice, WrapAsync(Controller.addSeasonalPrice));
+router.post("/:id/seasonal-pricing/:seasonId/delete", isLoggedIn, isOwner, WrapAsync(Controller.removeSeasonalPrice));
 
 router
     .route("/:id")

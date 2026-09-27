@@ -1,4 +1,5 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    const CLIENT_PAGE_SIZE = 8;
     const pageShell = document.getElementById("listing-page-shell");
     const filterRoot = document.getElementById("airbnb-filters");
     const filterPrevButton = document.getElementById("filter-rail-prev");
@@ -24,7 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveSearchForm = document.getElementById("save-search-form");
     const sortHiddenInputs = Array.from(document.querySelectorAll("[data-sort-hidden]"));
     const saveInputs = Array.from(document.querySelectorAll("[data-save-input]"));
-    const paginationLinks = Array.from(document.querySelectorAll("[data-page-number]"));
+    const paginationShell = document.getElementById("client-pagination");
+    const paginationPrev = document.getElementById("pagination-prev");
+    const paginationNext = document.getElementById("pagination-next");
+    const paginationPages = document.getElementById("pagination-pages");
+    const amenityLabels = Array.from(document.querySelectorAll(".amenity-pill"));
+    const resultsStatus = document.getElementById("listing-results-status");
 
     if (!pageShell || !filterRoot || !listingGrid) return;
 
@@ -33,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const preservedAmenities = Array.isArray(initialFilters.amenities) ? initialFilters.amenities : [];
     const preservedCheckIn = initialFilters.checkIn || "";
     const preservedCheckOut = initialFilters.checkOut || "";
+    let currentPage = getInitialPage();
     const categories = [
         { id: "all", label: "All", icon: "fa-border-all", keywords: [] },
         { id: "trending", label: "Trending", icon: "fa-fire", keywords: [] },
@@ -47,25 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let activeCategory = categories.some((item) => item.id === initialFilters.category) ? initialFilters.category : "all";
 
-    const listings = Array.from(listingGrid.querySelectorAll(".listing-item")).map((card) => {
-        const title = (card.dataset.title || "").trim();
-        const location = (card.dataset.location || "").trim();
-        const country = (card.dataset.country || "").trim();
-        const price = Number(card.dataset.price) || 0;
+    const listings = Array.from(listingGrid.querySelectorAll(".listing-item")).map(createListingEntry);
 
-        return {
-            card,
-            title,
-            location,
-            country,
-            titleLower: title.toLowerCase(),
-            locationLower: location.toLowerCase(),
-            countryLower: country.toLowerCase(),
-            searchableText: `${title} ${location} ${country}`.toLowerCase().trim(),
-            price,
-            priceNode: card.querySelector(".price-value"),
-        };
-    });
+    showLoadingState();
+    await loadRemainingListings();
 
     const trendingMinPrice = getTrendingMinPrice(listings);
     const minPriceInData = getMinPrice(listings);
@@ -79,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateDisplayedPrices();
     syncFormState();
 
-    showLoadingState();
     window.setTimeout(() => {
         applyFilters();
         hideLoadingState();
@@ -89,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const chip = event.target.closest(".airbnb-filter-chip");
         if (!chip) return;
 
+        currentPage = 1;
         activeCategory = chip.dataset.category;
         setActiveChip(chip);
         scrollChipIntoView(chip);
@@ -96,24 +88,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (taxToggle) taxToggle.addEventListener("change", updateDisplayedPrices);
-    if (searchInput) searchInput.addEventListener("input", applyFilters);
+    if (searchInput) {
+        searchInput.addEventListener("input", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+    }
     if (navbarSearchForm) {
         navbarSearchForm.addEventListener("submit", (event) => {
             event.preventDefault();
+            currentPage = 1;
             applyFilters();
         });
     }
 
     if (countryFilter) {
         countryFilter.addEventListener("change", () => {
+            currentPage = 1;
             populateLocationOptions(countryFilter.value);
             applyFilters();
         });
     }
 
-    if (locationFilter) locationFilter.addEventListener("change", applyFilters);
-    if (minPriceFilter) minPriceFilter.addEventListener("input", applyFilters);
-    if (maxPriceFilter) maxPriceFilter.addEventListener("input", applyFilters);
+    if (locationFilter) {
+        locationFilter.addEventListener("change", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+    }
+    if (minPriceFilter) {
+        minPriceFilter.addEventListener("input", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+    }
+    if (maxPriceFilter) {
+        maxPriceFilter.addEventListener("input", () => {
+            currentPage = 1;
+            applyFilters();
+        });
+    }
     if (clearFiltersButton) clearFiltersButton.addEventListener("click", resetAllFilters);
     if (noResultsResetButton) noResultsResetButton.addEventListener("click", resetAllFilters);
 
@@ -158,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <button
                 type="button"
                 class="airbnb-filter-chip ${category.id === activeCategory ? "active" : ""}"
+                aria-pressed="${category.id === activeCategory ? "true" : "false"}"
                 data-category="${category.id}">
                 <i class="fa-solid ${category.icon}"></i>
                 <span>${category.label}</span>
@@ -169,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function setActiveChip(activeChipNode) {
         filterRoot.querySelectorAll(".airbnb-filter-chip").forEach((chip) => {
             chip.classList.toggle("active", chip === activeChipNode);
+            chip.setAttribute("aria-pressed", String(chip === activeChipNode));
         });
     }
 
@@ -254,9 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const state = getState();
         const category = categories.find((item) => item.id === state.category) || categories[0];
         const keywords = category.keywords;
-        let visibleCount = 0;
-
-        listings.forEach((listing) => {
+        const matchedListings = listings.filter((listing) => {
             const matchesCategory = state.category === "trending"
                 ? isTrending(listing)
                 : matchesKeywordCategory(listing.searchableText, keywords);
@@ -264,20 +278,33 @@ document.addEventListener("DOMContentLoaded", () => {
             const matchesCountry = !state.country || listing.countryLower === state.country;
             const matchesLocation = !state.location || listing.locationLower === state.location;
             const matchesPrice = listing.price >= state.minPrice && listing.price <= state.maxPrice;
-            const shouldShow = matchesCategory && matchesSearch && matchesCountry && matchesLocation && matchesPrice;
+            return matchesCategory && matchesSearch && matchesCountry && matchesLocation && matchesPrice;
+        });
+        const visibleCount = matchedListings.length;
+        const totalPages = Math.max(1, Math.ceil(visibleCount / CLIENT_PAGE_SIZE));
 
-            listing.card.classList.toggle("d-none", !shouldShow);
-            if (shouldShow) visibleCount += 1;
+        currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+        const pageStart = (currentPage - 1) * CLIENT_PAGE_SIZE;
+        const pageEnd = pageStart + CLIENT_PAGE_SIZE;
+        const visibleListingIds = new Set(matchedListings.slice(pageStart, pageEnd).map((listing) => listing.card));
+
+        listings.forEach((listing) => {
+            listing.card.classList.toggle("d-none", !visibleListingIds.has(listing.card));
         });
 
         if (noResultsMessage) {
             noResultsMessage.classList.toggle("d-none", visibleCount > 0);
         }
 
+        if (resultsStatus) {
+            resultsStatus.textContent = visibleCount === 1 ? "1 stay available" : `${visibleCount} stays available`;
+        }
+
         updateFilterVisualState(state, visibleCount);
         syncFormState();
+        renderPagination(state, totalPages, visibleCount);
         syncUrl(state);
-        updatePaginationLinks(state);
     }
 
     function resetAllFilters() {
@@ -291,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (minPriceFilter) minPriceFilter.value = String(minPriceInData);
         if (maxPriceFilter) maxPriceFilter.value = String(maxPriceInData);
 
+        currentPage = 1;
         applyFilters();
     }
 
@@ -323,6 +351,18 @@ document.addEventListener("DOMContentLoaded", () => {
             noResultsMessage.classList.remove("d-none");
         }
     }
+
+    amenityLabels.forEach((label) => {
+        const input = label.querySelector("input[type='checkbox']");
+        if (!input) return;
+
+        const syncAmenityState = () => {
+            label.classList.toggle("is-checked", input.checked);
+        };
+
+        syncAmenityState();
+        input.addEventListener("change", syncAmenityState);
+    });
 
     function updateDisplayedPrices() {
         const showPriceWithTax = taxToggle && taxToggle.checked;
@@ -364,30 +404,61 @@ document.addEventListener("DOMContentLoaded", () => {
         setParam(params, "checkOut", preservedCheckOut);
         params.delete("amenities");
         preservedAmenities.forEach((amenity) => params.append("amenities", amenity));
-        params.set("page", "1");
+        params.set("page", String(currentPage));
         const nextUrl = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, "", nextUrl);
     }
 
-    function updatePaginationLinks(state) {
-        paginationLinks.forEach((link) => {
-            const pageNumber = Number(link.dataset.pageNumber || "1");
-            if (!Number.isInteger(pageNumber) || pageNumber < 1 || link.classList.contains("disabled")) return;
+    function renderPagination(state, totalPages, visibleCount) {
+        if (!paginationShell || !paginationPrev || !paginationNext || !paginationPages) return;
 
-            const params = new URLSearchParams();
-            setParam(params, "q", searchInput?.value.trim() || "");
-            setParam(params, "sort", sortSelect?.value || "newest");
-            setParam(params, "category", activeCategory === "all" ? "" : activeCategory);
-            setParam(params, "country", countryFilter?.value || "");
-            setParam(params, "location", locationFilter?.value || "");
-            setParam(params, "minPrice", state.minPrice === minPriceInData ? "" : String(state.minPrice));
-            setParam(params, "maxPrice", state.maxPrice === maxPriceInData ? "" : String(state.maxPrice));
-            setParam(params, "checkIn", preservedCheckIn);
-            setParam(params, "checkOut", preservedCheckOut);
-            preservedAmenities.forEach((amenity) => params.append("amenities", amenity));
-            params.set("page", String(pageNumber));
-            link.href = `/listings?${params.toString()}`;
-        });
+        paginationShell.classList.toggle("d-none", visibleCount <= CLIENT_PAGE_SIZE);
+        paginationPages.innerHTML = "";
+
+        if (visibleCount <= CLIENT_PAGE_SIZE) {
+            paginationPrev.classList.add("disabled");
+            paginationNext.classList.add("disabled");
+            paginationPrev.setAttribute("aria-disabled", "true");
+            paginationNext.setAttribute("aria-disabled", "true");
+            paginationPrev.href = "#";
+            paginationNext.href = "#";
+            return;
+        }
+
+        for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+            const link = document.createElement("a");
+            link.className = `pagination-page ${pageNumber === currentPage ? "active" : ""}`;
+            link.dataset.pageNumber = String(pageNumber);
+            link.href = buildListingHref(pageNumber, state);
+            link.textContent = String(pageNumber);
+            paginationPages.appendChild(link);
+        }
+
+        const isFirstPage = currentPage === 1;
+        const isLastPage = currentPage === totalPages;
+
+        paginationPrev.href = isFirstPage ? "#" : buildListingHref(currentPage - 1, state);
+        paginationNext.href = isLastPage ? "#" : buildListingHref(currentPage + 1, state);
+        paginationPrev.classList.toggle("disabled", isFirstPage);
+        paginationNext.classList.toggle("disabled", isLastPage);
+        paginationPrev.setAttribute("aria-disabled", String(isFirstPage));
+        paginationNext.setAttribute("aria-disabled", String(isLastPage));
+    }
+
+    function buildListingHref(pageNumber, state) {
+        const params = new URLSearchParams();
+        setParam(params, "q", searchInput?.value.trim() || "");
+        setParam(params, "sort", sortSelect?.value || "newest");
+        setParam(params, "category", activeCategory === "all" ? "" : activeCategory);
+        setParam(params, "country", countryFilter?.value || "");
+        setParam(params, "location", locationFilter?.value || "");
+        setParam(params, "minPrice", state.minPrice === minPriceInData ? "" : String(state.minPrice));
+        setParam(params, "maxPrice", state.maxPrice === maxPriceInData ? "" : String(state.maxPrice));
+        setParam(params, "checkIn", preservedCheckIn);
+        setParam(params, "checkOut", preservedCheckOut);
+        preservedAmenities.forEach((amenity) => params.append("amenities", amenity));
+        params.set("page", String(pageNumber));
+        return `/listings?${params.toString()}`;
     }
 
     function getState() {
@@ -421,6 +492,79 @@ document.addEventListener("DOMContentLoaded", () => {
     function hideLoadingState() {
         if (listingSkeletons) listingSkeletons.classList.add("d-none");
         if (listingGrid) listingGrid.classList.remove("d-none");
+    }
+
+    async function loadRemainingListings() {
+        const targetCount = getServerListingCount();
+        if (targetCount <= listings.length) return;
+
+        const parser = new DOMParser();
+        const baseParams = new URLSearchParams(window.location.search);
+        const serverPageSize = Math.max(listings.length, 1);
+        const totalServerPages = Math.max(1, Math.ceil(targetCount / serverPageSize));
+
+        for (let pageNumber = 1; pageNumber <= totalServerPages && listings.length < targetCount; pageNumber += 1) {
+            if (pageNumber === currentPage) continue;
+            const params = new URLSearchParams(baseParams);
+            params.set("page", String(pageNumber));
+
+            try {
+                const response = await fetch(`${window.location.pathname}?${params.toString()}`, {
+                    credentials: "same-origin",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+
+                if (!response.ok) break;
+
+                const html = await response.text();
+                const documentFragment = parser.parseFromString(html, "text/html");
+                const nextCards = Array.from(documentFragment.querySelectorAll("#listing-grid .listing-item"));
+
+                if (!nextCards.length) break;
+
+                nextCards.forEach((card) => {
+                    const importedCard = document.importNode(card, true);
+                    listingGrid.appendChild(importedCard);
+                    listings.push(createListingEntry(importedCard));
+                });
+            } catch (error) {
+                break;
+            }
+        }
+    }
+
+    function createListingEntry(card) {
+        const title = (card.dataset.title || "").trim();
+        const location = (card.dataset.location || "").trim();
+        const country = (card.dataset.country || "").trim();
+        const price = Number(card.dataset.price) || 0;
+
+        return {
+            card,
+            title,
+            location,
+            country,
+            titleLower: title.toLowerCase(),
+            locationLower: location.toLowerCase(),
+            countryLower: country.toLowerCase(),
+            searchableText: `${title} ${location} ${country}`.toLowerCase().trim(),
+            price,
+            priceNode: card.querySelector(".price-value"),
+        };
+    }
+
+    function getServerListingCount() {
+        const statusText = resultsStatus?.textContent || "";
+        const match = statusText.match(/(\d+)/);
+        return match ? Number(match[1]) : listings.length;
+    }
+
+    function getInitialPage() {
+        const params = new URLSearchParams(window.location.search);
+        const parsed = Number.parseInt(params.get("page") || initialFilters.page || "1", 10);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
     }
 
     function matchesKeywordCategory(searchableText, keywords) {
